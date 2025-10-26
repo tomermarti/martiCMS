@@ -5,11 +5,12 @@ import { uploadArticle, deleteArticleFolder } from '@/lib/spaces'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const article = await prisma.article.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
     
     if (!article) {
@@ -30,13 +31,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const data = await request.json()
     
     const existing = await prisma.article.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
     
     if (!existing) {
@@ -48,7 +50,7 @@ export async function PUT(
     
     // Update article in database
     const article = await prisma.article.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title: data.title,
         metaTitle: data.metaTitle,
@@ -89,11 +91,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const article = await prisma.article.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
     
     if (!article) {
@@ -110,7 +113,7 @@ export async function DELETE(
     
     // Delete from database
     await prisma.article.delete({
-      where: { id: params.id },
+      where: { id },
     })
     
     return NextResponse.json({ success: true })
