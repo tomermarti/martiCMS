@@ -324,12 +324,10 @@ export function generateHTML(article: ArticleData): string {
               <footer class="site-footer">
                 <div class="footer-container">
                     <div class="footer-simple">
-                        <a href="https://www.martideals.com/about">About</a>
-                        <a href="https://www.martideals.com/privacy-policy">Privacy</a>
-                        <a href="https://www.martideals.com/terms-of-service">Terms</a>
-                        <a href="https://www.martideals.com/categories">Categories</a>
-                        <a href="https://www.martideals.com/do-not-sell">Do Not Sell My Personal Information</a>
-                        <a href="https://www.martideals.com/ccpa-privacy-rights">CCPA Notice</a>
+                        <a href="https://www.martideals.com/assets/privacy-policy.html">Privacy</a>
+                        <a href="https://www.martideals.com/assets/terms-of-service.html">Terms</a>
+                        <a href="https://www.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a>
+                        <a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Notice</a>
                     </div>
                 </div>
               </footer>

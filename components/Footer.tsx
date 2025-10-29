@@ -31,8 +31,8 @@ export default function Footer() {
             <h4>MORE</h4>
             <ul className="footer-links">
               <li><a href="https://www.martideals.com/">Categories</a></li>
-              <li><a href="https://www.martideals.com/do-not-sell">Do Not Sell My Personal Information</a></li>
-              <li><a href="https://www.martideals.com/ccpa-privacy-rights">CCPA Notice</a></li>
+              <li><a href="https://www.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a></li>
+              <li><a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Notice</a></li>
             </ul>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function Footer() {
           <div className="footer-bottom-content">
             <p>&copy; {currentYear} MartiDeals. All rights reserved.</p>
             <div className="ccpa-notice">
-              <a href="https://www.martideals.com/do-not-sell" className="ccpa-link">
+              <a href="https://www.martideals.com/assets/do-not-sell.html" className="ccpa-link">
                 🔒 Your Privacy Choices / Do Not Sell My Personal Information
               </a>
             </div>

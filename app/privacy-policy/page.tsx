@@ -232,7 +232,7 @@ export default function PrivacyPolicy() {
             <p>
               If you are a California resident, you have additional rights under the California Consumer 
               Privacy Act (CCPA). Please see our{' '}
-              <a href="/ccpa-privacy-rights">CCPA Privacy Rights</a> page for more information.
+              <a href="/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a> page for more information.
             </p>
           </section>
         </div>

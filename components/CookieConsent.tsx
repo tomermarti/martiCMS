@@ -79,7 +79,7 @@ export default function CookieConsent() {
             <p>
               We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
               You can choose which cookies to accept. For California residents, this also relates to your 
-              <Link href="/ccpa-privacy-rights" className="privacy-link"> CCPA privacy rights</Link>.
+              <Link href="/assets/ccpa-privacy-rights.html" className="privacy-link"> CCPA privacy rights</Link>.
             </p>
           </div>
           
