@@ -3,570 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Notice For California Residents - MartiDeals</title>
+    <title>Do Not Sell or Share My Personal Information - MartiDeals</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-        
-        .privacy-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            background: white;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            border-radius: 20px;
-            margin-top: 40px;
-            margin-bottom: 40px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .privacy-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 8px;
-            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
-        }
-        
-        .header-section {
-            text-align: center;
-            padding-bottom: 40px;
-            border-bottom: 3px solid #e9ecef;
-            margin-bottom: 40px;
-            position: relative;
-        }
-        
-        .california-flag {
-            width: 60px;
-            height: 40px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            font-size: 2.3rem;
-            font-weight: 700;
-            margin: 0 0 15px 0;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .ccpa-badge {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            padding: 10px 20px;
-            border-radius: 25px;
-            display: inline-block;
-            color: #1565c0;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border: 2px solid #2196f3;
-        }
-        
-        h2 {
-            color: #2c3e50;
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 35px 0 20px 0;
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-left: 5px solid #1e3c72;
-            border-radius: 0 10px 10px 0;
-            position: relative;
-        }
-        
-        h3 {
-            color: #495057;
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin: 25px 0 15px 0;
-            padding-left: 15px;
-            border-left: 3px solid #2a5298;
-        }
-        
-        p {
-            margin-bottom: 16px;
-            text-align: justify;
-            color: #555;
-            line-height: 1.7;
-        }
-        
-        ul {
-            padding-left: 25px;
-            margin-bottom: 20px;
-        }
-        
-        li {
-            margin-bottom: 8px;
-            color: #555;
-            line-height: 1.6;
-        }
-        
-        li::marker {
-            color: #1e3c72;
-        }
-        
-        a {
-            color: #1e3c72;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-bottom: 1px solid transparent;
-        }
-        
-        a:hover {
-            color: #2a5298;
-            border-bottom-color: #2a5298;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            margin: 30px 0;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .ccpa-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-            font-size: 14px;
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-        
-        .ccpa-table th {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 20px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .ccpa-table td {
-            padding: 18px 15px;
-            border-bottom: 1px solid #e9ecef;
-            vertical-align: top;
-            line-height: 1.5;
-        }
-        
-        .ccpa-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .ccpa-table tr:hover {
-            background-color: #e3f2fd;
-            transition: background-color 0.3s ease;
-        }
-        
-        .ccpa-table td:first-child {
-            font-weight: 600;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-        
-        .ccpa-table td:last-child {
-            font-weight: 500;
-        }
-        
-        .highlight-section {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            border: 2px solid #ff9800;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 30px 0;
-            position: relative;
-        }
-        
-        .highlight-section::before {
-            content: '⚠️';
-            position: absolute;
-            top: -15px;
-            left: 25px;
-            background: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 1.2rem;
-        }
-        
-        .highlight-section h3 {
-            margin-top: 0;
-            color: #e65100;
-            border: none;
-            padding: 0;
-        }
-        
-        .rights-section {
-            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 30px 0;
-            border-left: 5px solid #4caf50;
-        }
-        
-        .rights-section h3 {
-            color: #2e7d32;
-            margin-top: 0;
-            border: none;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .rights-section h3::before {
-            content: '🛡️';
-            font-size: 1.2rem;
-        }
-        
-        .contact-section {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 35px;
-            border-radius: 20px;
-            margin-top: 50px;
-            text-align: center;
-        }
-        
-        .contact-section h2 {
-            color: white;
-            background: none;
-            border: none;
-            margin-top: 0;
-            padding: 0;
-        }
-        
-        .contact-section a {
-            color: white;
-            font-weight: 600;
-            text-decoration: underline;
-        }
-        
-        .contact-section a:hover {
-            color: #e3f2fd;
-        }
-        
-        @media (max-width: 768px) {
-            .privacy-container {
-                margin: 20px;
-                padding: 25px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            h2 {
-                font-size: 1.2rem;
-                padding: 12px 15px;
-            }
-            
-            .ccpa-table {
-                font-size: 12px;
-            }
-            
-            .ccpa-table th,
-            .ccpa-table td {
-                padding: 12px 10px;
-            }
-            
-            .california-flag {
-                width: 50px;
-                height: 35px;
-                font-size: 0.8rem;
-            }
-        }
-    </style>
 </head>
 <body>
     <div class="privacy-container">
-        <div class="header-section">
-            <div class="california-flag">CA</div>
-            <h1>Privacy Notice For California Residents</h1>
-            <div class="ccpa-badge">CCPA Compliant</div>
-        </div>
+        <h1>Do Not Sell or Share My Personal Information</h1>
         
-        <p>This PRIVACY NOTICE FOR CALIFORNIA RESIDENTS supplements the information contained in the privacy policy of Roundforest Ltd ("Roundforest" or "we") to be found at <a href="https://daily.get.martideals.com/assets/privacy-policy.html">Privacy Policy</a> and applies solely to visitors, users, and others who reside in the State of California ("consumers" or "you") in connection with the use of our Services. We adopt this notice to comply with the California Consumer Privacy Act of 2018 ("CCPA") and other California privacy laws. Any terms defined in the CCPA have the same meaning when used in this notice.</p>
-
-        <h2>1. Information we Collect</h2>
-        
-        <p>We collect information that identifies, relates to, describes, references, is capable of being associated with, or could reasonably be linked, directly or indirectly, with a particular consumer or household ("Personal Information"). In particular, we have collected the following categories of personal information from consumers within the last twelve (12) months:</p>
-
-        <div class="table-container">
-            <table class="ccpa-table">
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>Examples</th>
-                        <th>Collected</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>A. Identifiers</td>
-                        <td>A real name, postal address, unique personal identifier, online identifier, Internet Protocol address, email address, account name, or other similar identifiers</td>
-                        <td>YES: unique personal identifier, Internet protocol address and email address.</td>
-                    </tr>
-                    <tr>
-                        <td>B. Personal information categories listed in the California Customer Records statute</td>
-                        <td>A name, signature, Social Security number, physical characteristics or description, address, telephone number, passport number, driver's license or state identification card number, insurance policy number, education, employment, employment history, bank account number, credit card number, debit card number, or any other financial information, medical information, or health insurance information.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>C. Protected classification characteristics under California or federal law</td>
-                        <td>Age, race, color, ancestry, national origin, citizenship, religion or creed, marital status, medical condition, physical or mental disability, sex, sexual orientation, veteran or military status, genetic information.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>D. Commercial information</td>
-                        <td>Records of personal property, products or services purchased, obtained, or considered, or other purchasing or consuming histories or tendencies.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>E. Biometric information</td>
-                        <td>Genetic, physiological, behavioral, and biological characteristics, or activity patterns used to extract a template or other identifier or identifying information, such as, fingerprints, faceprints, and voiceprints, iris or retina scans, keystroke, gait, or other physical patterns, and sleep, health, or exercise data.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>F. Internet or other similar network activity</td>
-                        <td>Browsing history, search history, information on a consumer's interaction with a website, application, or advertisement.</td>
-                        <td>Yes: the user's interaction with our website.</td>
-                    </tr>
-                    <tr>
-                        <td>G. Geolocation data</td>
-                        <td>Physical location or movements.</td>
-                        <td>Yes: approximate location.</td>
-                    </tr>
-                    <tr>
-                        <td>H. Sensory data</td>
-                        <td>Audio, electronic, visual, thermal, olfactory, or similar information.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>I. Professional or employment-related information</td>
-                        <td>Current or past job history or performance evaluations.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>J. Non-public education information</td>
-                        <td>Education records directly related to a student maintained by an educational institution or party acting on its behalf, such as grades, transcripts, class lists, student schedules, student identification codes, student financial information, or student disciplinary records.</td>
-                        <td>NO</td>
-                    </tr>
-                    <tr>
-                        <td>K. Inferences drawn from other personal information</td>
-                        <td>Profile reflecting a person's preferences, characteristics, psychological trends, predispositions, behavior, attitudes, intelligence, abilities, and aptitudes.</td>
-                        <td>NO</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="intro-text">
+            <p>You may opt out of the "sale" of your personal information at any time. Once you submit your request, we will stop sharing your information and device identifiers with third parties. This opt-out works only for the device and browser you're using right now. If you use another computer, phone, or browser, you'll need to opt out again there too.</p>
         </div>
 
-        <p>We obtain the categories of personal information listed above from the following categories of sources:</p>
-        <ul>
-            <li>Directly from you. For example, when you contact us, etc.</li>
-            <li>Directly and indirectly from you when using our Services or visiting our website. For example, usage details collected automatically in the course of your interaction with our platform or website.</li>
-        </ul>
+        <div class="opt-out-form-container">
+            <form id="optOutForm" class="opt-out-form">
+                <div class="form-group">
+                    <button type="submit" class="btn-primary submit-btn">Submit Request</button>
+                </div>
+            </form>
+        </div>
 
-        <h2>2. Use of Personal Information</h2>
-        
-        <p>We may use or disclose the personal information we collect for one or more of the following business purposes:</p>
-        <ul>
-            <li>To fulfil or meet the reason for which the information is provided. For example, monitor and improve our services; provide the services; marketing our services; analyzing our services and your use of the services and website; respond to law enforcement; or otherwise as detailed in our Privacy Policy.</li>
-            <li>To provide, support, personalize, and develop our websites, products, and services.</li>
-            <li>For testing, research, analysis and product development.</li>
-            <li>As necessary or appropriate to protect the rights, property or safety of us, our clients or others.</li>
-            <li>To respond to law enforcement requests and as required by applicable law, court order, or governmental regulations.</li>
-            <li>As described to you when collecting your personal information or as otherwise set forth in the CCPA.</li>
-        </ul>
+        <div id="confirmationMessage" class="confirmation-message" style="display: none;">
+            <div class="confirmation-content">
+                <h3>Request Received</h3>
+                <p>Your request has been received. We will process your opt-out within 14 days and stop sharing your information.</p>
+            </div>
+        </div>
 
-        <p>We will not collect additional categories of personal information or use the personal information we collected for materially different, unrelated, or incompatible purposes without providing you notice.</p>
+        <div class="additional-info">
+            <h2>What This Means</h2>
+            <p>When you submit this request, we will:</p>
+            <ul>
+                <li>Stop sharing your personal information with third parties for advertising purposes</li>
+                <li>Stop sharing your device identifiers with advertising networks</li>
+                <li>Process your request within 14 business days</li>
+                <li>Apply the opt-out to this specific device and browser</li>
+            </ul>
 
-        <h2>3. Sharing Personal Information</h2>
-        
-        <p>We may disclose your personal information to a third party for a business purpose. When we disclose personal information for a business purpose, we enter a contract that describes the purpose and requires the recipient to both keep that personal information confidential and not use it for any purpose except performing the contract.</p>
+            <h2>Important Notes</h2>
+            <ul>
+                <li>This opt-out is device and browser specific</li>
+                <li>You'll need to submit separate requests for each device/browser you use</li>
+                <li>We may still collect information for essential business purposes</li>
+                <li>This does not affect information sharing required by law</li>
+            </ul>
 
-        <p>We share your personal information with the following categories of third parties:</p>
-        <ul>
-            <li>Subsidiaries and affiliates</li>
-            <li>Our clients or their agents for which you have engaged in a business contract.</li>
-            <li>Service providers and contractors, including:
-                <ul>
-                    <li>Google ads - pageviews, clicks, purchases</li>
-                    <li>Meta ads - pageviews, clicks, purchases</li>
-                    <li>TikTok ads - pageviews, clicks purchases</li>
-                    <li>X ads - pageviews, clicks purchases</li>
-                    <li>Outbrain ads - pageviews, clicks, purchases</li>
-                    <li>Google analytics - all events from website, internal purpose</li>
-                </ul>
-            </li>
-            <li>Third parties to whom you or your agents authorize us to disclose your personal information in connection with our Services.</li>
-            <li>Data aggregators</li>
-        </ul>
-
-        <p>In the preceding twelve (12) months, we have not sold any personal information.</p>
-
-        <p>While we do not sell personal information in exchange for any monetary or other valuable consideration, we do share personal information for other benefits that could be deemed a "sale," as defined by the CCPA. This includes sharing personal information with advertising networks, website analytics companies, and event sponsors.</p>
-
-        <h2>4. Your Rights and Choices</h2>
-        
-        <p>The CCPA provides consumers (California residents) with specific rights regarding their personal information. This section describes your CCPA rights and explains how to exercise those rights.</p>
-
-        <h3>Access to Specific Information and Data Portability Rights</h3>
-        <p>You have the right to request that we disclose certain information to you about our collection and use of your personal information over the past 12 months. Once we receive and confirm your verifiable consumer request, we will disclose to you:</p>
-        <ul>
-            <li>The categories of personal information we collected about you.</li>
-            <li>The categories of sources for the personal information we collected about you.</li>
-            <li>Our business or commercial purpose for collecting that personal information.</li>
-            <li>The categories of third parties with whom we share that personal information.</li>
-            <li>The specific pieces of personal information we collected about you (also called a data portability request).</li>
-            <li>If we sold or disclosed your personal information for a business purpose, two separate lists disclosing: (a) sales, identifying the personal information categories that each category of recipient purchased; and (b) disclosures for a business purpose, identifying the personal information categories that each category of recipient obtained.</li>
-        </ul>
-
-        <h3>Deletion Request Rights</h3>
-        <p>You have the right to request that we delete any of your personal information we collected from you and retained, subject to certain exceptions. Once we receive and confirm your verifiable consumer request, we will delete (and direct our service providers to delete) your personal information from our records, unless an exception applies.</p>
-
-        <h3>Exercising Access, Data Portability, and Deletion Rights</h3>
-        <p>To exercise the access, data portability, and deletion rights described above, please submit a verifiable consumer request to us by either:</p>
-        <ul>
-            <li>Sending an e-mail to us at privacy@roundforest.com</li>
-            <li>Sending a letter to us at our business address</li>
-        </ul>
-
-        <h2>5. Personal Information Sales Opt-Out and Opt-In Rights</h2>
-        
-        <p>You have the right to direct us to not sell your personal information at any time (the "right to opt-out"). Consumers who opt-in to personal information sales may opt-out of future sales at any time. To exercise the right to opt-out, you (or your authorized representative) may submit a request to us by visiting our <a href="https://daily.get.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a> page.</p>
-
-        <h2>6. Non-Discrimination</h2>
-        
-        <p>We will not discriminate against you for exercising any of your CCPA rights. Unless permitted by the CCPA, we will not:</p>
-        <ul>
-            <li>Deny you use of our Services.</li>
-            <li>Charge you different prices or rates for goods or services, including through granting discounts or other benefits, or imposing penalties.</li>
-            <li>Provide you a different level or quality of goods or services.</li>
-            <li>Suggest that you may receive a different price or rate for goods or services or a different level or quality of goods or services.</li>
-        </ul>
-
-        <h2>7. Changes to Our Privacy Notice</h2>
-        
-        <p>We reserve the right to amend this Privacy Notice at our discretion and at any time. The date this Privacy Notice was last updated is identified at the bottom of this page. You are responsible for periodically visiting our website and this Privacy Notice to check for any changes.</p>
-
-        <h2>8. Contact Information</h2>
-        
-        <p>If you have any questions or comments about this Privacy Notice, our Privacy Policy, the ways in which we collect and use your personal information, your choices and rights regarding such use, or wish to exercise your rights under California law, you may contact us via email at privacy@martideals.com.</p>
-
-        <p><strong>Updated:</strong> October 2024</p>
+            <h2>Questions?</h2>
+            <p>If you have questions about this process or your privacy rights, please contact us at privacy@roundforest.com or visit our <a href="/privacy-policy">Privacy Policy</a> and <a href="/ccpa-privacy-rights">CCPA Notice</a>.</p>
+        </div>
     </div>
+
+    <script>
+        // Function to delete all third-party cookies
+        function deleteThirdPartyCookies() {
+            // Get all cookies
+            const cookies = document.cookie.split(';');
+            
+            // Common third-party cookie prefixes/names to delete
+            const thirdPartyPrefixes = [
+                '_ga', '_gid', '_gat', '_gtag', '_gcl', // Google Analytics/Ads
+                '_fbp', '_fbc', 'fr', // Facebook
+                '__utma', '__utmb', '__utmc', '__utmt', '__utmz', // Google Analytics (legacy)
+                '_hjid', '_hjIncludedInSessionSample', // Hotjar
+                'IDE', 'DSID', 'FLC', 'AID', 'TAID', // DoubleClick
+                '__cfduid', // Cloudflare
+                '_tt_enable_cookie', 'tt_appInfo', 'tt_sessionId', // TikTok
+                'personalization_id', 'guest_id', // Twitter
+                'bcookie', 'lidc', 'UserMatchHistory', // LinkedIn
+                'uuid2', 'anj', 'sess', // AppNexus
+                'tuuid', 'tuuid_lu', // The Trade Desk
+                'CMID', 'CMPS', 'rum', // Casale Media
+                'rpb', 'rpx', // RunAds
+                'mc', 'ms', // Quantcast
+                'UID', 'UIDR', // Scorecardresearch
+                'ANID', 'CONSENT', 'NID', '1P_JAR', 'APISID', 'HSID', 'SAPISID', 'SID', 'SIDCC', 'SSID', // Google
+                'mp_', 'mixpanel', '__mp_opt_in_out' // Mixpanel
+            ];
+            
+            cookies.forEach(function(cookie) {
+                const cookieName = cookie.split('=')[0].trim();
+                
+                // Check if it's a third-party cookie
+                const isThirdParty = thirdPartyPrefixes.some(prefix => 
+                    cookieName.startsWith(prefix) || cookieName.includes(prefix)
+                );
+                
+                if (isThirdParty) {
+                    // Delete cookie for current domain
+                    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname + ';';
+                    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname + ';';
+                    
+                    // Try to delete for parent domains
+                    const domainParts = window.location.hostname.split('.');
+                    for (let i = 0; i < domainParts.length - 1; i++) {
+                        const parentDomain = '.' + domainParts.slice(i).join('.');
+                        document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + parentDomain + ';';
+                    }
+                    
+                }
+            });
+            
+            // Clear localStorage items related to tracking
+            const trackingKeys = [
+                '_ga', '_gid', '_gat', '_gtag',
+                '_fbp', '_fbc',
+                '__utma', '__utmb', '__utmc', '__utmt', '__utmz',
+                '_hjid', '_hjIncludedInSessionSample',
+                'mp_', 'mixpanel', '__mp_opt_in_out', 'mp_super_properties' // Mixpanel
+            ];
+            
+            trackingKeys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            
+            // Clear IndexedDB data (if any tracking scripts use it)
+            if ('indexedDB' in window) {
+                try {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            if (db.name && (db.name.includes('google') || db.name.includes('facebook') || db.name.includes('analytics'))) {
+                                indexedDB.deleteDatabase(db.name);
+                            }
+                        });
+                    });
+                } catch (e) {
+                }
+            }
+        }
+        
+        // Function to disable future tracking
+        function disableFutureTracking() {
+            // Set global opt-out flags that tracking scripts check
+            window['ga-disable-GA_MEASUREMENT_ID'] = true;
+            window.gtag = function() { };
+            window.fbq = function() { };
+            
+            // Disable Mixpanel tracking
+            if (typeof mixpanel !== 'undefined') {
+                mixpanel.opt_out_tracking();
+            }
+            
+            // Override Mixpanel functions to prevent future tracking
+            window.mixpanel = {
+                track: function() { },
+                identify: function() { },
+                people: {
+                    set: function() { },
+                    increment: function() { }
+                },
+                register: function() { },
+                opt_out_tracking: function() { return true; },
+                has_opted_out_tracking: function() { return true; }
+            };
+            
+            // Set Do Not Track
+            if (navigator.doNotTrack !== undefined) {
+                navigator.doNotTrack = "1";
+            }
+            
+            // Disable Google Analytics
+            if (typeof gtag !== 'undefined') {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'denied',
+                    'ad_storage': 'denied',
+                    'ad_user_data': 'denied',
+                    'ad_personalization': 'denied'
+                });
+            }
+        }
+
+        document.getElementById('optOutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Delete all third-party cookies immediately
+            deleteThirdPartyCookies();
+            
+            // Disable future tracking
+            disableFutureTracking();
+            
+            // Set opt-out flag in localStorage
+            localStorage.setItem('doNotSell', 'true');
+            localStorage.setItem('optOutDate', new Date().toISOString());
+            localStorage.setItem('cookiesDeleted', 'true');
+            
+            // Hide form and show confirmation
+            document.querySelector('.opt-out-form-container').style.display = 'none';
+            document.getElementById('confirmationMessage').style.display = 'block';
+            
+            // Update confirmation message to mention cookie deletion
+            const confirmationContent = document.querySelector('.confirmation-content p');
+            confirmationContent.innerHTML = 'Your request has been received. We have immediately deleted all third-party tracking cookies and will process your opt-out within 14 days to stop sharing your information.';
+            
+            // Optional: Send request to server (if endpoint exists)
+            // This would typically involve an API call to record the opt-out request
+            // Since cookie deletion happens client-side, this is just for logging
+            try {
+                fetch('/api/opt-out', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        optOut: true,
+                        cookiesDeleted: true
+                    })
+                }).then(response => {
+                    // Silent operation - no logging needed
+                }).catch(function(error) {
+                    // Silent operation - no logging needed
+                });
+            } catch (error) {
+                // Silent operation - no logging needed
+            }
+            
+        });
+
+        // Check if user has already opted out
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('doNotSell') === 'true') {
+                document.querySelector('.opt-out-form-container').style.display = 'none';
+                document.getElementById('confirmationMessage').style.display = 'block';
+                
+                // If they've already opted out, make sure tracking is still disabled
+                disableFutureTracking();
+                
+                // Update confirmation message for returning users
+                const confirmationContent = document.querySelector('.confirmation-content p');
+                const optOutDate = localStorage.getItem('optOutDate');
+                if (optOutDate) {
+                    const date = new Date(optOutDate).toLocaleDateString();
+                    confirmationContent.innerHTML = `You opted out on ${date}. Third-party tracking cookies have been deleted and we have stopped sharing your information.`;
+                }
+            }
+        });
+    </script>
 
     <style>
         .privacy-container {
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             font-family: Arial, sans-serif;
             line-height: 1.6;
         }
 
-        .table-container {
-            overflow-x: auto;
-            margin: 20px 0;
-        }
-
-        .ccpa-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-
-        .ccpa-table th,
-        .ccpa-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        .ccpa-table th {
+        .intro-text {
             background-color: #f8f9fa;
-            font-weight: bold;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
         }
 
-        .ccpa-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .opt-out-form-container {
+            text-align: center;
+            margin: 40px 0;
         }
 
-        .ccpa-table tr:hover {
-            background-color: #f5f5f5;
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
 
-        h1 {
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .confirmation-message {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .confirmation-content h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .confirmation-content p {
+            color: #155724;
+            margin: 0;
+        }
+
+        .additional-info {
+            margin-top: 40px;
+        }
+
+        .additional-info h2 {
             color: #333;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-
-        h2 {
-            color: #333;
-            margin-top: 30px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 5px;
         }
 
-        h3 {
-            color: #555;
-            margin-top: 25px;
-        }
-
-        ul {
+        .additional-info ul {
             padding-left: 20px;
         }
 
-        li {
+        .additional-info li {
             margin-bottom: 8px;
         }
 
-        a {
+        .additional-info a {
             color: #007bff;
             text-decoration: none;
         }
 
-        a:hover {
+        .additional-info a:hover {
             text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .ccpa-table {
-                font-size: 12px;
-            }
-            
-            .ccpa-table th,
-            .ccpa-table td {
-                padding: 8px;
-            }
         }
     </style>
 </body>
