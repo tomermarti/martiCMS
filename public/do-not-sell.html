@@ -100,7 +100,6 @@
                         document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + parentDomain + ';';
                     }
                     
-                    console.log('Deleted third-party cookie:', cookieName);
                 }
             });
             
@@ -125,12 +124,10 @@
                         databases.forEach(db => {
                             if (db.name && (db.name.includes('google') || db.name.includes('facebook') || db.name.includes('analytics'))) {
                                 indexedDB.deleteDatabase(db.name);
-                                console.log('Deleted IndexedDB:', db.name);
                             }
                         });
                     });
                 } catch (e) {
-                    console.log('Could not clear IndexedDB:', e);
                 }
             }
         }
@@ -139,24 +136,23 @@
         function disableFutureTracking() {
             // Set global opt-out flags that tracking scripts check
             window['ga-disable-GA_MEASUREMENT_ID'] = true;
-            window.gtag = function() { console.log('Google Analytics disabled due to opt-out'); };
-            window.fbq = function() { console.log('Facebook Pixel disabled due to opt-out'); };
+            window.gtag = function() { };
+            window.fbq = function() { };
             
             // Disable Mixpanel tracking
             if (typeof mixpanel !== 'undefined') {
                 mixpanel.opt_out_tracking();
-                console.log('Mixpanel tracking disabled due to opt-out');
             }
             
             // Override Mixpanel functions to prevent future tracking
             window.mixpanel = {
-                track: function() { console.log('Mixpanel tracking disabled due to opt-out'); },
-                identify: function() { console.log('Mixpanel identify disabled due to opt-out'); },
+                track: function() { },
+                identify: function() { },
                 people: {
-                    set: function() { console.log('Mixpanel people.set disabled due to opt-out'); },
-                    increment: function() { console.log('Mixpanel people.increment disabled due to opt-out'); }
+                    set: function() { },
+                    increment: function() { }
                 },
-                register: function() { console.log('Mixpanel register disabled due to opt-out'); },
+                register: function() { },
                 opt_out_tracking: function() { return true; },
                 has_opted_out_tracking: function() { return true; }
             };
@@ -199,24 +195,30 @@
             const confirmationContent = document.querySelector('.confirmation-content p');
             confirmationContent.innerHTML = 'Your request has been received. We have immediately deleted all third-party tracking cookies and will process your opt-out within 14 days to stop sharing your information.';
             
-            // Optional: Send request to server
+            // Optional: Send request to server (if endpoint exists)
             // This would typically involve an API call to record the opt-out request
-            fetch('/api/opt-out', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent,
-                    optOut: true,
-                    cookiesDeleted: true
-                })
-            }).catch(function(error) {
-                console.log('Opt-out request logged locally');
-            });
+            // Since cookie deletion happens client-side, this is just for logging
+            try {
+                fetch('/api/opt-out', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        optOut: true,
+                        cookiesDeleted: true
+                    })
+                }).then(response => {
+                    // Silent operation - no logging needed
+                }).catch(function(error) {
+                    // Silent operation - no logging needed
+                });
+            } catch (error) {
+                // Silent operation - no logging needed
+            }
             
-            console.log('✅ Opt-out complete: Third-party cookies deleted and tracking disabled');
         });
 
         // Check if user has already opted out
