@@ -230,7 +230,7 @@ Fields:
 ## HTML Template
 
 The generated HTML is clean and optimized with:
-- ✅ No Kueez branding
+- ✅ No marti branding
 - ✅ Semantic HTML5
 - ✅ Open Graph tags
 - ✅ Twitter Cards

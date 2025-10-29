@@ -11,17 +11,32 @@ const s3Client = new S3Client({
 
 const BUCKET = process.env.DO_SPACES_BUCKET!
 
-export async function uploadFile(key: string, body: string | Buffer, contentType: string) {
+export async function uploadFile(key: string, body: string | Buffer, contentType: string, forceCacheBust = false) {
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     Body: body,
     ContentType: contentType,
     ACL: 'public-read',
+    CacheControl: forceCacheBust || key.startsWith('layout/') ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600'
   })
 
   await s3Client.send(command)
   return `https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/${key}`
+}
+
+// New function specifically for layout files with cache purging
+export async function uploadLayoutFile(key: string, body: string) {
+  // Upload with aggressive cache busting
+  const url = await uploadFile(key, body, 'text/html', true)
+  
+  // Also upload a versioned copy for immediate access
+  const timestamp = Date.now()
+  const versionedKey = key.replace('.html', `-${timestamp}.html`)
+  await uploadFile(versionedKey, body, 'text/html', true)
+  
+  console.log(`✅ Layout file uploaded: ${key} (versioned: ${versionedKey})`)
+  return { url, versionedUrl: `https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/${versionedKey}`, timestamp }
 }
 
 export async function deleteFile(key: string) {

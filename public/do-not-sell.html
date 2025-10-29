@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do Not Sell or Share My Personal Information - MartiDeals</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="privacy-container">
+        <h1>Do Not Sell or Share My Personal Information</h1>
+        
+        <div class="intro-text">
+            <p>You may opt out of the "sale" of your personal information at any time. Once you submit your request, we will stop sharing your information and device identifiers with third parties. This opt-out works only for the device and browser you're using right now. If you use another computer, phone, or browser, you'll need to opt out again there too.</p>
+        </div>
+
+        <div class="opt-out-form-container">
+            <form id="optOutForm" class="opt-out-form">
+                <div class="form-group">
+                    <button type="submit" class="btn-primary submit-btn">Submit Request</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="confirmationMessage" class="confirmation-message" style="display: none;">
+            <div class="confirmation-content">
+                <h3>Request Received</h3>
+                <p>Your request has been received. We will process your opt-out within 14 days and stop sharing your information.</p>
+            </div>
+        </div>
+
+        <div class="additional-info">
+            <h2>What This Means</h2>
+            <p>When you submit this request, we will:</p>
+            <ul>
+                <li>Stop sharing your personal information with third parties for advertising purposes</li>
+                <li>Stop sharing your device identifiers with advertising networks</li>
+                <li>Process your request within 14 business days</li>
+                <li>Apply the opt-out to this specific device and browser</li>
+            </ul>
+
+            <h2>Important Notes</h2>
+            <ul>
+                <li>This opt-out is device and browser specific</li>
+                <li>You'll need to submit separate requests for each device/browser you use</li>
+                <li>We may still collect information for essential business purposes</li>
+                <li>This does not affect information sharing required by law</li>
+            </ul>
+
+            <h2>Questions?</h2>
+            <p>If you have questions about this process or your privacy rights, please contact us at privacy@roundforest.com or visit our <a href="/privacy-policy">Privacy Policy</a> and <a href="/ccpa-privacy-rights">CCPA Notice</a>.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('optOutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Set opt-out flag in localStorage
+            localStorage.setItem('doNotSell', 'true');
+            localStorage.setItem('optOutDate', new Date().toISOString());
+            
+            // Hide form and show confirmation
+            document.querySelector('.opt-out-form-container').style.display = 'none';
+            document.getElementById('confirmationMessage').style.display = 'block';
+            
+            // Optional: Send request to server
+            // This would typically involve an API call to record the opt-out request
+            fetch('/api/opt-out', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    optOut: true
+                })
+            }).catch(function(error) {
+                console.log('Opt-out request logged locally');
+            });
+        });
+
+        // Check if user has already opted out
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('doNotSell') === 'true') {
+                document.querySelector('.opt-out-form-container').style.display = 'none';
+                document.getElementById('confirmationMessage').style.display = 'block';
+            }
+        });
+    </script>
+
+    <style>
+        .privacy-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        .intro-text {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+
+        .opt-out-form-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .confirmation-message {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .confirmation-content h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .confirmation-content p {
+            color: #155724;
+            margin: 0;
+        }
+
+        .additional-info {
+            margin-top: 40px;
+        }
+
+        .additional-info h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .additional-info ul {
+            padding-left: 20px;
+        }
+
+        .additional-info li {
+            margin-bottom: 8px;
+        }
+
+        .additional-info a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .additional-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</body>
+</html>

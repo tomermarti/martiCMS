@@ -1,0 +1,61 @@
+<footer class="site-footer">
+    <div class="footer-container">
+        <!-- Opt-in Disclaimer -->
+        <div class="opt-in-disclaimer">
+            <p>By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</p>
+        </div>
+        
+        <div class="footer-simple">
+            <a href="https://daily.get.martideals.com/assets/privacy-policy.html">Privacy Policy</a>
+            <a href="https://daily.get.martideals.com/assets/terms-of-service.html">Terms & Conditions</a>
+            <a href="https://daily.get.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a>
+            <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html">CCPA Notice</a>
+        </div>
+        
+        <!-- Copyright -->
+        <div class="footer-copyright">
+            <p>MartiDeals.com © 2025 All Rights Reserved</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Cookie Consent Banner -->
+<div id="cookie-banner" class="cookie-banner" style="display: none;">
+    <div class="cookie-banner-content">
+        <div class="cookie-info">
+            <h3>We Value Your Privacy</h3>
+            <p>We use cookies to enhance your browsing experience and analyze our traffic. By clicking "Accept All", you consent to our use of cookies. <a href="https://daily.get.martideals.com/assets/privacy-policy.html" class="privacy-link">Learn more</a></p>
+        </div>
+        <div class="cookie-actions">
+            <button onclick="acceptCookies()" class="btn-primary btn-sm">Accept All</button>
+            <button onclick="declineCookies()" class="btn-outlined btn-sm">Decline</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cookie consent functionality
+function showCookieBanner() {
+    if (!localStorage.getItem('cookieConsent')) {
+        document.getElementById('cookie-banner').style.display = 'block';
+    }
+}
+
+function acceptCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    document.getElementById('cookie-banner').style.display = 'none';
+    
+    // Initialize tracking scripts here if needed
+    if (typeof initializeTracking === 'function') {
+        initializeTracking();
+    }
+}
+
+function declineCookies() {
+    localStorage.setItem('cookieConsent', 'declined');
+    document.getElementById('cookie-banner').style.display = 'none';
+}
+
+// Show banner on page load
+document.addEventListener('DOMContentLoaded', showCookieBanner);
+</script>

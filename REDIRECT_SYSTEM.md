@@ -15,7 +15,7 @@ https://amazon.com/dp/B123456789
 
 **Gets transformed to:**
 ```
-https://www.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=123124234234
+https://tracking.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=123124234234
 ```
 
 ### 2. **Dynamic ad_id Extraction**
@@ -46,7 +46,7 @@ encodeUrlToBase64("https://amazon.com/dp/B123456789")
 
 // Creates redirect URL
 createRedirectUrl("https://amazon.com/dp/B123456789", "123124234234")
-// Returns: "https://www.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=123124234234"
+// Returns: "https://tracking.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=123124234234"
 ```
 
 ### Client-Side Processing (JavaScript in articles)
@@ -68,16 +68,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ### 1. **Article Creation**
 - User enters: `https://amazon.com/dp/B123456789`
-- System stores: `https://www.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=default`
+- System stores: `https://tracking.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=default`
 
 ### 2. **Article Visit with ad_id**
 - User visits: `https://daily.get.martideals.com/best-deals/index.html?ad_id=999888777`
 - JavaScript extracts: `ad_id=999888777`
-- Updates CTA to: `https://www.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=999888777`
+- Updates CTA to: `https://tracking.martideals.com/partners/url-deep-redirect?url=aHR0cHM6Ly9hbWF6b24uY29tL2RwL0IxMjM0NTY3ODk=&redirectId=999888777`
 
 ### 3. **Click Tracking**
 - User clicks CTA button
-- Redirects through: `https://www.martideals.com/partners/url-deep-redirect`
+- Redirects through: `https://tracking.martideals.com/partners/url-deep-redirect`
 - Martideals tracks: `redirectId=999888777`
 - User lands on: `https://amazon.com/dp/B123456789`
 
@@ -101,7 +101,7 @@ To test the system:
 ## URL Structure Reference
 
 ```
-https://www.martideals.com/partners/url-deep-redirect
+https://tracking.martideals.com/partners/url-deep-redirect
   ?url={BASE64_ENCODED_ORIGINAL_URL}
   &redirectId={DYNAMIC_AD_ID_FROM_CURRENT_PAGE}
 ```

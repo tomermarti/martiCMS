@@ -45,7 +45,7 @@ export function createRedirectUrl(originalUrl: string, adId: string | null): str
   const encodedUrl = encodeUrlToBase64(originalUrl)
   
   // Construct the redirect URL
-  return `https://www.martideals.com/partners/url-deep-redirect?url=${encodedUrl}&redirectId=${redirectId}`
+  return `https://tracking.martideals.com/partners/url-deep-redirect?url=${encodedUrl}&redirectId=${redirectId}`
 }
 
 /**
