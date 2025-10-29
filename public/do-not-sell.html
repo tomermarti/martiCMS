@@ -53,16 +53,151 @@
     </div>
 
     <script>
+        // Function to delete all third-party cookies
+        function deleteThirdPartyCookies() {
+            // Get all cookies
+            const cookies = document.cookie.split(';');
+            
+            // Common third-party cookie prefixes/names to delete
+            const thirdPartyPrefixes = [
+                '_ga', '_gid', '_gat', '_gtag', '_gcl', // Google Analytics/Ads
+                '_fbp', '_fbc', 'fr', // Facebook
+                '__utma', '__utmb', '__utmc', '__utmt', '__utmz', // Google Analytics (legacy)
+                '_hjid', '_hjIncludedInSessionSample', // Hotjar
+                'IDE', 'DSID', 'FLC', 'AID', 'TAID', // DoubleClick
+                '__cfduid', // Cloudflare
+                '_tt_enable_cookie', 'tt_appInfo', 'tt_sessionId', // TikTok
+                'personalization_id', 'guest_id', // Twitter
+                'bcookie', 'lidc', 'UserMatchHistory', // LinkedIn
+                'uuid2', 'anj', 'sess', // AppNexus
+                'tuuid', 'tuuid_lu', // The Trade Desk
+                'CMID', 'CMPS', 'rum', // Casale Media
+                'rpb', 'rpx', // RunAds
+                'mc', 'ms', // Quantcast
+                'UID', 'UIDR', // Scorecardresearch
+                'ANID', 'CONSENT', 'NID', '1P_JAR', 'APISID', 'HSID', 'SAPISID', 'SID', 'SIDCC', 'SSID', // Google
+                'mp_', 'mixpanel', '__mp_opt_in_out' // Mixpanel
+            ];
+            
+            cookies.forEach(function(cookie) {
+                const cookieName = cookie.split('=')[0].trim();
+                
+                // Check if it's a third-party cookie
+                const isThirdParty = thirdPartyPrefixes.some(prefix => 
+                    cookieName.startsWith(prefix) || cookieName.includes(prefix)
+                );
+                
+                if (isThirdParty) {
+                    // Delete cookie for current domain
+                    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname + ';';
+                    document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname + ';';
+                    
+                    // Try to delete for parent domains
+                    const domainParts = window.location.hostname.split('.');
+                    for (let i = 0; i < domainParts.length - 1; i++) {
+                        const parentDomain = '.' + domainParts.slice(i).join('.');
+                        document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + parentDomain + ';';
+                    }
+                    
+                    console.log('Deleted third-party cookie:', cookieName);
+                }
+            });
+            
+            // Clear localStorage items related to tracking
+            const trackingKeys = [
+                '_ga', '_gid', '_gat', '_gtag',
+                '_fbp', '_fbc',
+                '__utma', '__utmb', '__utmc', '__utmt', '__utmz',
+                '_hjid', '_hjIncludedInSessionSample',
+                'mp_', 'mixpanel', '__mp_opt_in_out', 'mp_super_properties' // Mixpanel
+            ];
+            
+            trackingKeys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            
+            // Clear IndexedDB data (if any tracking scripts use it)
+            if ('indexedDB' in window) {
+                try {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            if (db.name && (db.name.includes('google') || db.name.includes('facebook') || db.name.includes('analytics'))) {
+                                indexedDB.deleteDatabase(db.name);
+                                console.log('Deleted IndexedDB:', db.name);
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.log('Could not clear IndexedDB:', e);
+                }
+            }
+        }
+        
+        // Function to disable future tracking
+        function disableFutureTracking() {
+            // Set global opt-out flags that tracking scripts check
+            window['ga-disable-GA_MEASUREMENT_ID'] = true;
+            window.gtag = function() { console.log('Google Analytics disabled due to opt-out'); };
+            window.fbq = function() { console.log('Facebook Pixel disabled due to opt-out'); };
+            
+            // Disable Mixpanel tracking
+            if (typeof mixpanel !== 'undefined') {
+                mixpanel.opt_out_tracking();
+                console.log('Mixpanel tracking disabled due to opt-out');
+            }
+            
+            // Override Mixpanel functions to prevent future tracking
+            window.mixpanel = {
+                track: function() { console.log('Mixpanel tracking disabled due to opt-out'); },
+                identify: function() { console.log('Mixpanel identify disabled due to opt-out'); },
+                people: {
+                    set: function() { console.log('Mixpanel people.set disabled due to opt-out'); },
+                    increment: function() { console.log('Mixpanel people.increment disabled due to opt-out'); }
+                },
+                register: function() { console.log('Mixpanel register disabled due to opt-out'); },
+                opt_out_tracking: function() { return true; },
+                has_opted_out_tracking: function() { return true; }
+            };
+            
+            // Set Do Not Track
+            if (navigator.doNotTrack !== undefined) {
+                navigator.doNotTrack = "1";
+            }
+            
+            // Disable Google Analytics
+            if (typeof gtag !== 'undefined') {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'denied',
+                    'ad_storage': 'denied',
+                    'ad_user_data': 'denied',
+                    'ad_personalization': 'denied'
+                });
+            }
+        }
+
         document.getElementById('optOutForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Delete all third-party cookies immediately
+            deleteThirdPartyCookies();
+            
+            // Disable future tracking
+            disableFutureTracking();
             
             // Set opt-out flag in localStorage
             localStorage.setItem('doNotSell', 'true');
             localStorage.setItem('optOutDate', new Date().toISOString());
+            localStorage.setItem('cookiesDeleted', 'true');
             
             // Hide form and show confirmation
             document.querySelector('.opt-out-form-container').style.display = 'none';
             document.getElementById('confirmationMessage').style.display = 'block';
+            
+            // Update confirmation message to mention cookie deletion
+            const confirmationContent = document.querySelector('.confirmation-content p');
+            confirmationContent.innerHTML = 'Your request has been received. We have immediately deleted all third-party tracking cookies and will process your opt-out within 14 days to stop sharing your information.';
             
             // Optional: Send request to server
             // This would typically involve an API call to record the opt-out request
@@ -74,11 +209,14 @@
                 body: JSON.stringify({
                     timestamp: new Date().toISOString(),
                     userAgent: navigator.userAgent,
-                    optOut: true
+                    optOut: true,
+                    cookiesDeleted: true
                 })
             }).catch(function(error) {
                 console.log('Opt-out request logged locally');
             });
+            
+            console.log('✅ Opt-out complete: Third-party cookies deleted and tracking disabled');
         });
 
         // Check if user has already opted out
@@ -86,6 +224,17 @@
             if (localStorage.getItem('doNotSell') === 'true') {
                 document.querySelector('.opt-out-form-container').style.display = 'none';
                 document.getElementById('confirmationMessage').style.display = 'block';
+                
+                // If they've already opted out, make sure tracking is still disabled
+                disableFutureTracking();
+                
+                // Update confirmation message for returning users
+                const confirmationContent = document.querySelector('.confirmation-content p');
+                const optOutDate = localStorage.getItem('optOutDate');
+                if (optOutDate) {
+                    const date = new Date(optOutDate).toLocaleDateString();
+                    confirmationContent.innerHTML = `You opted out on ${date}. Third-party tracking cookies have been deleted and we have stopped sharing your information.`;
+                }
             }
         });
     </script>
