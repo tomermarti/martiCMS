@@ -1,7 +1,4 @@
-export const metadata = {
-  title: 'Cookie Policy - MartiDeals',
-  description: 'Learn about how MartiDeals uses cookies and similar technologies.',
-}
+'use client'
 
 export default function CookiePolicy() {
   return (
@@ -132,8 +129,8 @@ export default function CookiePolicy() {
               On mobile devices, you can manage cookies and tracking through your device settings:
             </p>
             <ul>
-              <li><strong>iOS:</strong> Settings > Privacy & Security > Tracking</li>
-              <li><strong>Android:</strong> Settings > Privacy > Ads</li>
+              <li><strong>iOS:</strong> Settings → Privacy & Security → Tracking</li>
+              <li><strong>Android:</strong> Settings → Privacy → Ads</li>
             </ul>
           </section>
 

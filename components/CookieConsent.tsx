@@ -78,6 +78,8 @@ export default function CookieConsent() {
             <h3>🍪 We Value Your Privacy</h3>
             <p>
               We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
+              <strong> By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong>
+              <br /><br />
               You can choose which cookies to accept. For California residents, this also relates to your 
               <Link href="/assets/ccpa-privacy-rights.html" className="privacy-link"> CCPA privacy rights</Link>.
             </p>

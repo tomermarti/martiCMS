@@ -1,9 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function DoNotSell() {
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [alreadyOptedOut, setAlreadyOptedOut] = useState(false)
+
+  useEffect(() => {
+    // Check if user has already opted out
+    const optOut = localStorage.getItem('ccpa-opt-out')
+    if (optOut === 'true') {
+      setAlreadyOptedOut(true)
+      setIsSubmitted(true)
+    }
+  }, [])
 
   const handleSubmit = () => {
     // Set opt-out preference in localStorage
@@ -18,9 +28,95 @@ export default function DoNotSell() {
       personalization: false
     }
     localStorage.setItem('cookie-consent', JSON.stringify(consent))
+    localStorage.setItem('cookie-consent-date', new Date().toISOString())
+    
+    // Delete existing third-party cookies
+    deleteThirdPartyCookies()
     
     // Show confirmation
     setIsSubmitted(true)
+    
+    // Optional: Send request to server for logging
+    try {
+      fetch('/api/ccpa-opt-out', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          optOut: true
+        })
+      }).catch(() => {
+        // Silent failure - the client-side opt-out is what matters
+      })
+    } catch (error) {
+      // Silent failure - the client-side opt-out is what matters
+    }
+  }
+
+  const deleteThirdPartyCookies = () => {
+    // Get all cookies
+    const cookies = document.cookie.split(';')
+    
+    // Common third-party cookie prefixes/names to delete
+    const thirdPartyPrefixes = [
+      '_ga', '_gid', '_gat', '_gtag', '_gcl', // Google Analytics/Ads
+      '_fbp', '_fbc', 'fr', // Facebook
+      '__utma', '__utmb', '__utmc', '__utmt', '__utmz', // Google Analytics (legacy)
+      '_hjid', '_hjIncludedInSessionSample', // Hotjar
+      'IDE', 'DSID', 'FLC', 'AID', 'TAID', // DoubleClick
+      '__cfduid', // Cloudflare
+      '_tt_enable_cookie', 'tt_appInfo', 'tt_sessionId', // TikTok
+      'personalization_id', 'guest_id', // Twitter
+      'bcookie', 'lidc', 'UserMatchHistory', // LinkedIn
+      'uuid2', 'anj', 'sess', // AppNexus
+      'tuuid', 'tuuid_lu', // The Trade Desk
+      'CMID', 'CMPS', 'rum', // Casale Media
+      'rpb', 'rpx', // RunAds
+      'mc', 'ms', // Quantcast
+      'UID', 'UIDR', // Scorecardresearch
+      'ANID', 'CONSENT', 'NID', '1P_JAR', 'APISID', 'HSID', 'SAPISID', 'SID', 'SIDCC', 'SSID', // Google
+      'mp_', 'mixpanel', '__mp_opt_in_out' // Mixpanel
+    ]
+    
+    cookies.forEach(function(cookie) {
+      const cookieName = cookie.split('=')[0].trim()
+      
+      // Check if it's a third-party cookie
+      const isThirdParty = thirdPartyPrefixes.some(prefix => 
+        cookieName.startsWith(prefix) || cookieName.includes(prefix)
+      )
+      
+      if (isThirdParty) {
+        // Delete cookie for current domain
+        document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+        document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname + ';'
+        document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname + ';'
+        
+        // Try to delete for parent domains
+        const domainParts = window.location.hostname.split('.')
+        for (let i = 0; i < domainParts.length - 1; i++) {
+          const parentDomain = '.' + domainParts.slice(i).join('.')
+          document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + parentDomain + ';'
+        }
+      }
+    })
+    
+    // Clear localStorage items related to tracking
+    const trackingKeys = [
+      '_ga', '_gid', '_gat', '_gtag',
+      '_fbp', '_fbc',
+      '__utma', '__utmb', '__utmc', '__utmt', '__utmz',
+      '_hjid', '_hjIncludedInSessionSample',
+      'mp_', 'mixpanel', '__mp_opt_in_out', 'mp_super_properties'
+    ]
+    
+    trackingKeys.forEach(key => {
+      localStorage.removeItem(key)
+      sessionStorage.removeItem(key)
+    })
   }
 
   return (
@@ -54,11 +150,23 @@ export default function DoNotSell() {
           ) : (
             <div className="confirmation-section">
               <div className="confirmation-message">
-                <h2>✅ Request Received</h2>
+                <h2>✅ {alreadyOptedOut ? 'Already Opted Out' : 'Request Received'}</h2>
                 <p>
-                  Your request has been received. We will process your opt-out within 14 days 
-                  and stop sharing your information.
+                  {alreadyOptedOut 
+                    ? 'You have already opted out of the sale of your personal information. Your preferences are still active and we continue to respect your choice.'
+                    : 'Your request has been received and processed immediately. We have deleted third-party tracking cookies and will stop sharing your information with third parties for advertising purposes.'
+                  }
                 </p>
+                <div className="additional-info">
+                  <h3>What happens next:</h3>
+                  <ul>
+                    <li>✅ Third-party tracking cookies have been deleted</li>
+                    <li>✅ Marketing cookies have been disabled</li>
+                    <li>✅ Your device identifier will not be shared with advertisers</li>
+                    <li>⚠️ This opt-out is device and browser specific</li>
+                    <li>📱 You'll need to opt-out separately on other devices/browsers</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}
@@ -154,9 +262,35 @@ export default function DoNotSell() {
 
         .confirmation-message p {
           font-size: var(--font-size-lg);
-          margin: 0;
+          margin: 0 0 var(--spacing-4) 0;
           color: rgba(255, 255, 255, 0.9);
           line-height: 1.6;
+        }
+
+        .additional-info {
+          background: rgba(255, 255, 255, 0.1);
+          padding: var(--spacing-4);
+          border-radius: var(--border-radius);
+          margin-top: var(--spacing-4);
+          text-align: left;
+        }
+
+        .additional-info h3 {
+          font-size: var(--font-size-lg);
+          font-weight: 600;
+          margin: 0 0 var(--spacing-3) 0;
+          color: white;
+        }
+
+        .additional-info ul {
+          margin: 0;
+          padding-left: var(--spacing-4);
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .additional-info li {
+          margin-bottom: var(--spacing-2);
+          line-height: 1.4;
         }
 
         @media (max-width: 768px) {

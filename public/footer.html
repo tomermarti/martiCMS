@@ -1,14 +1,19 @@
 <footer class="site-footer">
     <div class="footer-container">
+        <!-- Editorial Note -->
+        <div class="editorial-note">
+            <p><strong>Editorial Note:</strong> We independently review all products. If you make a purchase through our links, we may receive a commission.</p>
+        </div>
+        
         <!-- Opt-in Disclaimer -->
         <div class="opt-in-disclaimer">
-            <p>By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</p>
+            <p>By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.</p>
         </div>
         
         <div class="footer-simple">
             <a href="https://daily.get.martideals.com/assets/privacy-policy.html">Privacy Policy</a>
             <a href="https://daily.get.martideals.com/assets/terms-of-service.html">Terms & Conditions</a>
-            <a href="https://daily.get.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a>
+            <a href="https://daily.get.martideals.com/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a>
             <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html">CCPA Notice</a>
         </div>
         
@@ -19,30 +24,42 @@
     </div>
 </footer>
 
-<!-- Cookie Consent Banner -->
+<!-- CCPA Cookie Consent Banner -->
 <div id="cookie-banner" class="cookie-banner" style="display: none;">
     <div class="cookie-banner-content">
         <div class="cookie-info">
-            <h3>We Value Your Privacy</h3>
-            <p>We use cookies to enhance your browsing experience and analyze our traffic. By clicking "Accept All", you consent to our use of cookies. <a href="https://daily.get.martideals.com/assets/privacy-policy.html" class="privacy-link">Learn more</a></p>
+            <h3>🍪 We Value Your Privacy</h3>
+            <p>
+                We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
+                <strong>By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong>
+                <br><br>
+                California residents have additional <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">CCPA privacy rights</a>.
+            </p>
         </div>
         <div class="cookie-actions">
             <button onclick="acceptCookies()" class="btn-primary btn-sm">Accept All</button>
-            <button onclick="declineCookies()" class="btn-outlined btn-sm">Decline</button>
+            <button onclick="rejectCookies()" class="btn-outlined btn-sm">Reject All</button>
         </div>
     </div>
 </div>
 
 <script>
-// Cookie consent functionality
+// CCPA Cookie Consent Logic
 function showCookieBanner() {
-    if (!localStorage.getItem('cookieConsent')) {
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) {
         document.getElementById('cookie-banner').style.display = 'block';
     }
 }
 
 function acceptCookies() {
-    localStorage.setItem('cookieConsent', 'accepted');
+    localStorage.setItem('cookie-consent', JSON.stringify({
+        necessary: true,
+        analytics: true,
+        marketing: true,
+        personalization: true
+    }));
+    localStorage.setItem('cookie-consent-date', new Date().toISOString());
     document.getElementById('cookie-banner').style.display = 'none';
     
     // Initialize tracking scripts here if needed
@@ -51,11 +68,19 @@ function acceptCookies() {
     }
 }
 
-function declineCookies() {
-    localStorage.setItem('cookieConsent', 'declined');
+function rejectCookies() {
+    localStorage.setItem('cookie-consent', JSON.stringify({
+        necessary: true,
+        analytics: false,
+        marketing: false,
+        personalization: false
+    }));
+    localStorage.setItem('cookie-consent-date', new Date().toISOString());
     document.getElementById('cookie-banner').style.display = 'none';
 }
 
 // Show banner on page load
-document.addEventListener('DOMContentLoaded', showCookieBanner);
+document.addEventListener('DOMContentLoaded', function() {
+    showCookieBanner();
+});
 </script>

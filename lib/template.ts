@@ -319,15 +319,28 @@ export function generateHTML(article: ArticleData): string {
             document.getElementById('dynamic-footer').innerHTML = html;
           } catch (fallbackError) {
             console.warn('Failed to load dynamic footer:', fallbackError);
-            // Final fallback footer - simple format
+            // Final fallback footer - simple format with CCPA compliance
             document.getElementById('dynamic-footer').innerHTML = \`
               <footer class="site-footer">
                 <div class="footer-container">
+                    <!-- Editorial Note -->
+                    <div class="editorial-note">
+                        <p><strong>Editorial Note:</strong> We independently review all products. If you make a purchase through our links, we may receive a commission.</p>
+                    </div>
+                    
+                    <!-- Opt-in Disclaimer -->
+                    <div class="opt-in-disclaimer">
+                        <p>By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.</p>
+                    </div>
                     <div class="footer-simple">
-                        <a href="https://www.martideals.com/assets/privacy-policy.html">Privacy</a>
-                        <a href="https://www.martideals.com/assets/terms-of-service.html">Terms</a>
-                        <a href="https://www.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a>
-                        <a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Notice</a>
+                        <a href="https://www.martideals.com/assets/privacy-policy.html">Privacy Policy</a>
+                        <a href="https://www.martideals.com/assets/terms-of-service.html">Terms & Conditions</a>
+                        <a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a>
+                        <a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a>
+                        <a href="https://www.martideals.com/cookie-policy">Cookie Policy</a>
+                    </div>
+                    <div class="footer-copyright">
+                        <p>MartiDeals.com © 2025 All Rights Reserved</p>
                     </div>
                 </div>
               </footer>
@@ -347,7 +360,9 @@ export function generateHTML(article: ArticleData): string {
             <div class="cookie-info">
                 <h3>🍪 We Value Your Privacy</h3>
                 <p>
-                    We use cookies to enhance your experience and for marketing purposes. 
+                    We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
+                    By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.
+                    <br><br>
                     California residents have additional <a href="https://www.martideals.com/ccpa-privacy-rights" class="privacy-link">CCPA privacy rights</a>.
                 </p>
             </div>

@@ -1,4 +1,6 @@
 import '../global.css'
+import Footer from '@/components/Footer'
+import CookieConsent from '@/components/CookieConsent'
 
 export const metadata = {
   title: 'MartiCMS - Content Management System',
@@ -12,7 +14,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <div className="app-container">
+          <main className="main-content">
+            {children}
+          </main>
+          <Footer />
+        </div>
+        <CookieConsent />
+      </body>
     </html>
   )
 }

@@ -28,11 +28,12 @@ export default function Footer() {
           </div>
 
           <div className="footer-section">
-            <h4>MORE</h4>
+            <h4>PRIVACY & LEGAL</h4>
             <ul className="footer-links">
               <li><a href="https://www.martideals.com/">Categories</a></li>
-              <li><a href="https://www.martideals.com/assets/do-not-sell.html">Do Not Sell My Personal Information</a></li>
-              <li><a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Notice</a></li>
+              <li><a href="https://www.martideals.com/assets/do-not-sell.html" className="ccpa-important">🔒 Do Not Sell My Personal Information</a></li>
+              <li><a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a></li>
+              <li><a href="https://www.martideals.com/cookie-policy">Cookie Policy</a></li>
             </ul>
           </div>
         </div>
@@ -112,6 +113,20 @@ export default function Footer() {
 
         .footer-links a:hover {
           color: var(--color-primary);
+        }
+
+        .footer-links a.ccpa-important {
+          color: var(--color-primary);
+          font-weight: 600;
+          padding: var(--spacing-1) var(--spacing-2);
+          border-radius: var(--border-radius-sm);
+          background: var(--color-primaryTranslucent);
+          border: 1px solid var(--color-primaryBorder);
+        }
+
+        .footer-links a.ccpa-important:hover {
+          background: var(--color-primary);
+          color: white;
         }
 
         .footer-bottom {

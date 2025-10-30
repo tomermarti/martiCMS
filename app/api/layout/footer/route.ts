@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadLayoutFile } from '@/lib/spaces'
 
-// Default footer content with updated structure and www.martideals.com links
+// Default footer content with CCPA compliance and updated structure
 const DEFAULT_FOOTER = `<footer class="site-footer">
     <div class="footer-container">
+        <!-- Opt-in Disclaimer -->
+        <div class="opt-in-disclaimer">
+            <p><strong>By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong></p>
+        </div>
+        
         <div class="footer-content">
             <div class="footer-section">
                 <div class="footer-brand">
@@ -16,17 +21,18 @@ const DEFAULT_FOOTER = `<footer class="site-footer">
                 <h4>COMPANY</h4>
                 <ul class="footer-links">
                     <li><a href="https://www.martideals.com/about">About</a></li>
-                    <li><a href="https://www.martideals.com/privacy-policy">Privacy</a></li>
-                    <li><a href="https://www.martideals.com/terms-of-service">Terms</a></li>
+                    <li><a href="https://www.martideals.com/privacy-policy">Privacy Policy</a></li>
+                    <li><a href="https://www.martideals.com/terms-of-service">Terms of Service</a></li>
                 </ul>
             </div>
             
             <div class="footer-section">
-                <h4>MORE</h4>
+                <h4>PRIVACY & LEGAL</h4>
                 <ul class="footer-links">
                     <li><a href="https://www.martideals.com/">Categories</a></li>
-                    <li><a href="https://www.martideals.com/do-not-sell">Do Not Sell My Personal Information</a></li>
-                    <li><a href="https://www.martideals.com/ccpa-privacy-rights">CCPA Notice</a></li>
+                    <li><a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a></li>
+                    <li><a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a></li>
+                    <li><a href="https://www.martideals.com/cookie-policy">Cookie Policy</a></li>
                 </ul>
             </div>
         </div>
@@ -35,7 +41,7 @@ const DEFAULT_FOOTER = `<footer class="site-footer">
             <div class="footer-bottom-content">
                 <p>&copy; 2025 MartiDeals. All rights reserved.</p>
                 <div class="ccpa-notice">
-                    <a href="https://www.martideals.com/do-not-sell" class="ccpa-link">
+                    <a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-link">
                         🔒 Your Privacy Choices / Do Not Sell My Personal Information
                     </a>
                 </div>
