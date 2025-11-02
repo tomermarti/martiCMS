@@ -10,7 +10,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "upload-css": "node scripts/upload-css.js",
-    "upload-assets": "node scripts/upload-assets.js",
+    "upload-assets": "npx tsx scripts/upload-assets.js",
     "sync-layout": "node scripts/sync-layout-manager.js"
   },
   "dependencies": {

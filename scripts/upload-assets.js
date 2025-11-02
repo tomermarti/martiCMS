@@ -37,6 +37,24 @@ async function uploadAssets() {
         remote: 'assets/footer.html',
         contentType: 'text/html',
         description: 'Footer component'
+      },
+      {
+        local: 'favicon.ico',
+        remote: 'assets/favicon.ico',
+        contentType: 'image/x-icon',
+        description: 'Favicon ICO'
+      },
+      {
+        local: 'martideals-logo.svg',
+        remote: 'assets/martideals-logo.svg',
+        contentType: 'image/svg+xml',
+        description: 'Martideals SVG Logo'
+      },
+      {
+        local: 'marti_logo.png',
+        remote: 'assets/marti_logo.png',
+        contentType: 'image/png',
+        description: 'Marti PNG Logo'
       }
     ];
 
@@ -47,7 +65,12 @@ async function uploadAssets() {
         console.log(`📤 Uploading ${asset.description}...`);
         
         const localPath = path.join(publicDir, asset.local);
-        const content = fs.readFileSync(localPath, 'utf8');
+        
+        // Read binary files as buffer, text files as utf8
+        const isBinary = asset.contentType.startsWith('image/');
+        const content = isBinary 
+          ? fs.readFileSync(localPath) 
+          : fs.readFileSync(localPath, 'utf8');
         
         const url = await uploadFile(asset.remote, content, asset.contentType);
         uploadedAssets[asset.local] = url;

@@ -105,8 +105,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
     }
     </script>
     
-    <!-- Facebook Pixel Placeholder -->
-    ${article.facebookPixel ? `
+    <!-- Facebook Pixel -->
     <script>
       !function(f,b,e,v,n,t,s)
       {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -116,13 +115,12 @@ export async function generateHTML(article: ArticleData): Promise<string> {
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '${article.facebookPixel}');
+      fbq('init', '${article.facebookPixel || '2034568930646321'}');
       fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-      src="https://www.facebook.com/tr?id=${article.facebookPixel}&ev=PageView&noscript=1"
+      src="https://www.facebook.com/tr?id=${article.facebookPixel || '2034568930646321'}&ev=PageView&noscript=1"
     /></noscript>
-    ` : '<!-- Facebook Pixel: Add your pixel ID in CMS -->'}
     
     <!-- Custom Scripts Placeholder -->
     ${article.customScripts || '<!-- Custom scripts: Add in CMS -->'}
@@ -705,6 +703,23 @@ export async function generateHTML(article: ArticleData): Promise<string> {
           ...eventData
         });
         
+        // Also track conversion with Facebook Pixel
+        if (typeof fbq !== 'undefined') {
+          try {
+            fbq('track', 'Purchase', {
+              content_name: conversionType || 'AB Test Conversion',
+              content_category: 'AB Test',
+              content_ids: [window.abTestData.articleId || 'unknown'],
+              content_type: 'conversion',
+              value: 1.00,
+              currency: 'USD'
+            });
+            console.log('✅ Facebook Pixel Purchase event fired for AB test conversion');
+          } catch (error) {
+            console.error('❌ Facebook Pixel conversion tracking failed:', error);
+          }
+        }
+        
         console.log('🎯 Conversion tracked:', conversionType);
       };
 
@@ -803,6 +818,41 @@ export async function generateHTML(article: ArticleData): Promise<string> {
           }
         } else {
           console.warn('⚠️ Mixpanel not available for CTA tracking');
+        }
+        
+        // Track Facebook Pixel Purchase Event for Amazon clickouts
+        if (typeof fbq !== 'undefined') {
+          try {
+            // Check if this is an Amazon link or redirect to Amazon
+            const isAmazonLink = url && (
+              url.includes('amazon.com') || 
+              url.includes('amzn.to') ||
+              url.includes('martideals.com/partners/url-deep-redirect') // Our redirect system
+            );
+            
+            if (isAmazonLink) {
+              fbq('track', 'Purchase', {
+                content_name: eventData.cta_text || 'Product Click',
+                content_category: 'Product',
+                content_ids: [eventData.article_id || 'unknown'],
+                content_type: 'product',
+                value: 1.00, // Default value, can be customized
+                currency: 'USD'
+              });
+              console.log('✅ Facebook Pixel Purchase event fired for Amazon clickout');
+            } else {
+              // For non-Amazon links, track as InitiateCheckout
+              fbq('track', 'InitiateCheckout', {
+                content_name: eventData.cta_text || 'CTA Click',
+                content_category: 'Engagement'
+              });
+              console.log('✅ Facebook Pixel InitiateCheckout event fired for CTA click');
+            }
+          } catch (error) {
+            console.error('❌ Facebook Pixel tracking failed:', error);
+          }
+        } else {
+          console.warn('⚠️ Facebook Pixel not available for purchase tracking');
         }
         
         // Also use the trackEvent function for localStorage backup
@@ -909,7 +959,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
                 setTimeout(function() {
                   window.open(url, '_blank', 'noopener,noreferrer');
                   console.log('🔗 Opened in new tab:', url);
-                }, 100);
+                }, 150); // Increased delay to ensure FB Pixel fires
                 
               } else {
                 // For non-external links, just track normally
