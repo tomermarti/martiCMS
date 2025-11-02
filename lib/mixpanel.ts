@@ -3,14 +3,46 @@ import mixpanel from 'mixpanel-browser'
 // Initialize Mixpanel
 const MIXPANEL_TOKEN = 'e474bceac7e0d60bc3c4cb27aaf1d4f7'
 
+// Track initialization state
+let isInitialized = false
+
 // Initialize only on client side
 if (typeof window !== 'undefined') {
-  mixpanel.init(MIXPANEL_TOKEN, {
-    debug: process.env.NODE_ENV === 'development',
-    track_pageview: true,
-    persistence: 'localStorage',
-    ignore_dnt: false,
-  })
+  try {
+    mixpanel.init(MIXPANEL_TOKEN, {
+      debug: process.env.NODE_ENV === 'development',
+      track_pageview: false, // We'll track manually
+      persistence: 'localStorage',
+      ignore_dnt: false,
+    })
+    isInitialized = true
+    console.log('Mixpanel initialized successfully')
+  } catch (error) {
+    console.error('Failed to initialize Mixpanel:', error)
+  }
+}
+
+// Helper to ensure Mixpanel is initialized
+function ensureInitialized(): boolean {
+  if (typeof window === 'undefined') return false
+  
+  if (!isInitialized) {
+    try {
+      mixpanel.init(MIXPANEL_TOKEN, {
+        debug: process.env.NODE_ENV === 'development',
+        track_pageview: false,
+        persistence: 'localStorage',
+        ignore_dnt: false,
+      })
+      isInitialized = true
+      console.log('Mixpanel initialized on demand')
+    } catch (error) {
+      console.error('Failed to initialize Mixpanel:', error)
+      return false
+    }
+  }
+  
+  return isInitialized
 }
 
 // Extract ALL URL parameters and tracking data from URL
@@ -92,7 +124,7 @@ export function getABTestContext(): Record<string, any> {
 
 // Enhanced tracking function that includes all context
 export function trackWithFullContext(eventName: string, properties: Record<string, any> = {}): void {
-  if (typeof window === 'undefined') return
+  if (!ensureInitialized()) return
   
   const trackingParams = getTrackingParameters()
   const abTestContext = getABTestContext()
@@ -113,7 +145,12 @@ export function trackWithFullContext(eventName: string, properties: Record<strin
     ...properties // User properties override defaults
   }
   
-  mixpanel.track(eventName, fullProperties)
+  try {
+    mixpanel.track(eventName, fullProperties)
+    console.log(`Tracked: ${eventName}`, fullProperties)
+  } catch (error) {
+    console.error(`Failed to track ${eventName}:`, error)
+  }
 }
 
 // Mixpanel tracking utilities

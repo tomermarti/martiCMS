@@ -169,7 +169,12 @@ export default function VariantManager({ articleId, onVariantsChange }: VariantM
                 )}
               </div>
               <div className="variant-traffic">
-                <span className="traffic-percent">{variant.trafficPercent}%</span>
+                <VariantTrafficEditor
+                  articleId={articleId}
+                  variantId={variant.id}
+                  currentPercent={variant.trafficPercent}
+                  onUpdate={loadVariants}
+                />
               </div>
             </div>
 
@@ -1394,5 +1399,172 @@ function TemplatePreviewModal({ template, placeholderData, onPlaceholderChange, 
         `}</style>
       </div>
     </div>
+  )
+}
+
+// Variant Traffic Editor Component for inline editing
+interface VariantTrafficEditorProps {
+  articleId: string
+  variantId: string
+  currentPercent: number
+  onUpdate: () => void
+}
+
+function VariantTrafficEditor({ articleId, variantId, currentPercent, onUpdate }: VariantTrafficEditorProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [value, setValue] = useState(currentPercent.toString())
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    const newPercent = parseFloat(value)
+    
+    if (isNaN(newPercent) || newPercent < 0 || newPercent > 100) {
+      alert('Please enter a valid percentage between 0 and 100')
+      setValue(currentPercent.toString())
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/articles/${articleId}/variants/${variantId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trafficPercent: newPercent }),
+      })
+      
+      if (response.ok) {
+        setIsEditing(false)
+        onUpdate()
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+        setValue(currentPercent.toString())
+      }
+    } catch (error) {
+      console.error('Error updating traffic percentage:', error)
+      alert('Failed to update traffic percentage')
+      setValue(currentPercent.toString())
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setValue(currentPercent.toString())
+    setIsEditing(false)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave()
+    } else if (e.key === 'Escape') {
+      handleCancel()
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="variant-traffic-editor">
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="0.1"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyPress}
+          onBlur={handleSave}
+          autoFocus
+          disabled={saving}
+          className="traffic-input"
+        />
+        <span className="traffic-controls">
+          <button onClick={handleSave} disabled={saving} className="save-btn">
+            {saving ? '⏳' : '✓'}
+          </button>
+          <button onClick={handleCancel} disabled={saving} className="cancel-btn">
+            ✕
+          </button>
+        </span>
+        <style jsx>{`
+          .variant-traffic-editor {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+          
+          .traffic-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: right;
+            color: #007bff;
+          }
+          
+          .traffic-controls {
+            display: flex;
+            gap: 2px;
+          }
+          
+          .save-btn, .cancel-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            border-radius: 3px;
+          }
+          
+          .save-btn {
+            color: #28a745;
+          }
+          
+          .save-btn:hover {
+            background: rgba(40, 167, 69, 0.1);
+          }
+          
+          .cancel-btn {
+            color: #dc3545;
+          }
+          
+          .cancel-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+          }
+          
+          .save-btn:disabled, .cancel-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  return (
+    <span 
+      className="traffic-percent editable" 
+      onClick={() => setIsEditing(true)}
+      title="Click to edit traffic percentage"
+    >
+      {currentPercent}% ✏️
+      <style jsx>{`
+        .traffic-percent.editable {
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+          font-size: 24px;
+          font-weight: 600;
+          color: #007bff;
+        }
+        
+        .traffic-percent.editable:hover {
+          background: rgba(0, 123, 255, 0.1);
+        }
+      `}</style>
+    </span>
   )
 }

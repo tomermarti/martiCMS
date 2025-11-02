@@ -236,7 +236,13 @@ export default function ABTestManager({ articleId, articleTitle }: ABTestManager
                           <span className="winner-badge">🏆 Winner</span>
                         )}
                       </h4>
-                      <span className="traffic-percent">{variant.trafficPercent}%</span>
+                      <TrafficPercentEditor
+                        testId={test.id}
+                        variantId={variant.id}
+                        currentPercent={variant.trafficPercent}
+                        isDisabled={test.distributionMode === 'auto_pilot' || test.status !== 'running'}
+                        onUpdate={fetchTests}
+                      />
                     </div>
 
                     <div className="variant-stats">
@@ -556,5 +562,191 @@ export default function ABTestManager({ articleId, articleTitle }: ABTestManager
         }
       `}</style>
     </div>
+  )
+}
+
+// Traffic Percent Editor Component for inline editing
+interface TrafficPercentEditorProps {
+  testId: string
+  variantId: string
+  currentPercent: number
+  isDisabled: boolean
+  onUpdate: () => void
+}
+
+function TrafficPercentEditor({ testId, variantId, currentPercent, isDisabled, onUpdate }: TrafficPercentEditorProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [value, setValue] = useState(currentPercent.toString())
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    const newPercent = parseFloat(value)
+    
+    if (isNaN(newPercent) || newPercent < 0 || newPercent > 100) {
+      alert('Please enter a valid percentage between 0 and 100')
+      setValue(currentPercent.toString())
+      return
+    }
+
+    setSaving(true)
+    try {
+      // Get current test data to update all variants
+      const testResponse = await fetch(`/api/ab-tests/${testId}`)
+      if (!testResponse.ok) throw new Error('Failed to fetch test data')
+      
+      const testData = await testResponse.json()
+      
+      // Update the specific variant's percentage
+      const updatedVariants = testData.variants.map((v: any) => 
+        v.id === variantId 
+          ? { ...v, trafficPercent: newPercent }
+          : v
+      )
+      
+      // Update the test with new variant percentages
+      const response = await fetch(`/api/ab-tests/${testId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variants: updatedVariants }),
+      })
+      
+      if (response.ok) {
+        setIsEditing(false)
+        onUpdate()
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+        setValue(currentPercent.toString())
+      }
+    } catch (error) {
+      console.error('Error updating traffic percentage:', error)
+      alert('Failed to update traffic percentage')
+      setValue(currentPercent.toString())
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setValue(currentPercent.toString())
+    setIsEditing(false)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave()
+    } else if (e.key === 'Escape') {
+      handleCancel()
+    }
+  }
+
+  if (isDisabled) {
+    return <span className="traffic-percent disabled">{currentPercent}%</span>
+  }
+
+  if (isEditing) {
+    return (
+      <div className="traffic-editor">
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="0.1"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyPress}
+          onBlur={handleSave}
+          autoFocus
+          disabled={saving}
+          className="traffic-input"
+        />
+        <span className="traffic-controls">
+          <button onClick={handleSave} disabled={saving} className="save-btn">
+            {saving ? '⏳' : '✓'}
+          </button>
+          <button onClick={handleCancel} disabled={saving} className="cancel-btn">
+            ✕
+          </button>
+        </span>
+        <style jsx>{`
+          .traffic-editor {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+          
+          .traffic-input {
+            width: 60px;
+            padding: 2px 6px;
+            border: 1px solid var(--color-primary);
+            border-radius: 3px;
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            text-align: right;
+          }
+          
+          .traffic-controls {
+            display: flex;
+            gap: 2px;
+          }
+          
+          .save-btn, .cancel-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px;
+            border-radius: 2px;
+          }
+          
+          .save-btn {
+            color: #28a745;
+          }
+          
+          .save-btn:hover {
+            background: rgba(40, 167, 69, 0.1);
+          }
+          
+          .cancel-btn {
+            color: #dc3545;
+          }
+          
+          .cancel-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+          }
+          
+          .save-btn:disabled, .cancel-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  return (
+    <span 
+      className="traffic-percent editable" 
+      onClick={() => setIsEditing(true)}
+      title="Click to edit traffic percentage"
+    >
+      {currentPercent}% ✏️
+      <style jsx>{`
+        .traffic-percent.editable {
+          cursor: pointer;
+          padding: 2px 4px;
+          border-radius: 3px;
+          transition: background-color 0.2s;
+        }
+        
+        .traffic-percent.editable:hover {
+          background: rgba(var(--color-primary-rgb), 0.1);
+        }
+        
+        .traffic-percent.disabled {
+          opacity: 0.6;
+        }
+      `}</style>
+    </span>
   )
 }

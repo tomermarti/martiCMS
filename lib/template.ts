@@ -181,19 +181,24 @@ export async function generateHTML(article: ArticleData): Promise<string> {
         const trackingParams = getTrackingParameters();
         const fullProperties = {
           ...trackingParams,
+          article_id: '${article.id}',
+          article_slug: '${article.slug}',
           timestamp: new Date().toISOString(),
           ...properties
         };
         
         console.log('📊 Event tracked:', eventName, fullProperties);
         
-        // Try Mixpanel if available
-        if (typeof window.mixpanel !== 'undefined' && window.mixpanel.track) {
+        // Try Mixpanel if available (it should be queued if not loaded yet)
+        if (typeof mixpanel !== 'undefined' && mixpanel.track) {
           try {
-            window.mixpanel.track(eventName, fullProperties);
+            mixpanel.track(eventName, fullProperties);
+            console.log('✅ Sent to Mixpanel:', eventName);
           } catch (error) {
-            console.log('Mixpanel tracking failed, using console only');
+            console.error('❌ Mixpanel tracking failed:', error);
           }
+        } else {
+          console.warn('⚠️ Mixpanel not available yet for:', eventName);
         }
         
         // Store in localStorage for debugging
@@ -309,19 +314,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
                     
                     applyVariantWhenReady();
 
-                    // Track variant view
-                    trackEvent('Variant Viewed', {
-                      test_id: test.id,
-                      test_name: test.name,
-                      variant_id: variant.id,
-                      variant_name: variant.name,
-                      article_id: window.abTestData.articleId,
-                      article_slug: window.abTestData.articleSlug,
-                      is_control: variant.isControl,
-                      traffic_percent: variant.trafficPercent,
-                      template_id: variant.template ? variant.template.id : null,
-                      timestamp: new Date().toISOString()
-                    });
+                    // Variant info will be included in the page view event automatically
                   } else {
                     console.log('📝 No active variants found in test');
                   }
@@ -406,6 +399,10 @@ export async function generateHTML(article: ArticleData): Promise<string> {
               const renderedContent = renderTemplate(variant.template.htmlContent, variant.data);
               element.innerHTML = renderedContent;
               console.log('✅ Replaced main content with template:', variant.template.name);
+              
+              // Show content after template is applied
+              showArticleContent();
+              
               return; // Template takes precedence
             }
 
@@ -443,6 +440,10 @@ export async function generateHTML(article: ArticleData): Promise<string> {
               if (htmlContent) {
                 element.innerHTML = htmlContent;
                 console.log('✅ Replaced main content with data-based HTML');
+                
+                // Show content after data-based HTML is applied
+                showArticleContent();
+                
                 return;
               }
             }
@@ -525,6 +526,10 @@ export async function generateHTML(article: ArticleData): Promise<string> {
               }
 
               console.log('✅ Successfully applied variant changes');
+              
+              // Show content after variant changes are applied
+              showArticleContent();
+              
               return;
             }
 
@@ -634,6 +639,67 @@ export async function generateHTML(article: ArticleData): Promise<string> {
         return 'https://tracking.martideals.com/partners/url-deep-redirect?url=' + encodedUrl + '&redirectId=' + redirectId;
       }
       
+      // Track CTA clicks with Mixpanel
+      function trackCTAClick(element, url) {
+        console.log('🎯 trackCTAClick called with:', {
+          element: element.tagName + '.' + element.className,
+          url: url,
+          text: element.textContent?.substring(0, 50)
+        });
+        
+        const trackingParams = getTrackingParameters();
+        const abTestData = window.abTestData || {};
+        
+        console.log('📊 Tracking params:', trackingParams);
+        console.log('🧪 AB test data:', abTestData);
+        
+        const eventData = {
+          ...trackingParams,
+          article_id: '${article.id}',
+          article_slug: '${article.slug}',
+          cta_url: url,
+          cta_text: (element.textContent || element.getAttribute('aria-label') || 'Unknown').trim().substring(0, 100),
+          cta_type: element.className,
+          element_tag: element.tagName,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Add A/B test context if available (including variant_name)
+        if (abTestData.currentVariant) {
+          eventData.variant_name = abTestData.currentVariant.name;
+          eventData.variant_id = abTestData.currentVariant.id;
+          eventData.is_control = abTestData.currentVariant.isControl;
+          console.log('✅ Added variant info:', eventData.variant_name);
+        } else {
+          console.log('⚠️ No variant data available');
+        }
+        
+        if (abTestData.currentTest) {
+          eventData.test_name = abTestData.currentTest.name;
+          eventData.test_id = abTestData.currentTest.id;
+          console.log('✅ Added test info:', eventData.test_name);
+        } else {
+          console.log('⚠️ No test data available');
+        }
+        
+        console.log('📤 Final event data:', eventData);
+        
+        // Track with Mixpanel
+        if (typeof mixpanel !== 'undefined' && mixpanel.track) {
+          try {
+            mixpanel.track('CTA Clicked', eventData);
+            console.log('✅ Successfully sent to Mixpanel: CTA Clicked');
+          } catch (error) {
+            console.error('❌ Mixpanel tracking failed:', error);
+          }
+        } else {
+          console.warn('⚠️ Mixpanel not available for CTA tracking');
+        }
+        
+        // Also use the trackEvent function for localStorage backup
+        trackEvent('CTA Clicked', eventData);
+      }
+      
       // Update all CTA links with dynamic ad_id when page loads
       document.addEventListener('DOMContentLoaded', function() {
         const adId = extractAdIdFromUrl(window.location.href);
@@ -683,6 +749,135 @@ export async function generateHTML(article: ArticleData): Promise<string> {
           
           console.log('Updated CTA links and clickable containers with ad_id:', adId);
         }
+        
+        // Set up comprehensive click tracking
+        function setupClickTracking() {
+          console.log('🔧 Setting up click tracking...');
+          
+          // Track ALL clicks on the document with event delegation
+          document.addEventListener('click', function(e) {
+            const element = e.target;
+            const closestLink = element.closest('a') || (element.tagName === 'A' ? element : null);
+            const url = element.getAttribute('href') || element.getAttribute('onclick') || 
+                       (closestLink ? closestLink.getAttribute('href') : null);
+            
+            console.log('👆 Click detected on:', element.tagName, element.className, 'URL:', url);
+            
+            // Determine if this should be tracked
+            const shouldTrack = (
+              // External links
+              (url && (url.startsWith('http') || url.includes('martideals.com') || url.includes('redirect'))) ||
+              // Target blank links
+              element.getAttribute('target') === '_blank' ||
+              (closestLink && closestLink.getAttribute('target') === '_blank') ||
+              // CTA classes
+              element.classList.contains('btn-primary') ||
+              element.classList.contains('btn-secondary') ||
+              element.classList.contains('product-cta') ||
+              element.classList.contains('clickable') ||
+              // Data attributes
+              element.hasAttribute('data-track-click') ||
+              // Parent has CTA class (for nested elements like spans inside buttons)
+              element.closest('.btn-primary, .btn-secondary, .product-cta, [data-track-click]')
+            );
+            
+            if (shouldTrack) {
+              console.log('✅ Tracking this click!');
+              
+              // Handle opening in new tab for external links
+              const isExternalLink = url && (url.startsWith('http') || url.includes('martideals.com') || url.includes('redirect'));
+              
+              if (isExternalLink && closestLink) {
+                // Prevent default navigation
+                e.preventDefault();
+                
+                // Track the click first
+                const trackingElement = element.closest('.btn-primary, .btn-secondary, .product-cta, [data-track-click]') || element;
+                const trackingUrl = url || trackingElement.getAttribute('href') || trackingElement.getAttribute('onclick') || 'tracked-click';
+                trackCTAClick(trackingElement, trackingUrl);
+                
+                // Then open in new tab after a short delay to ensure tracking completes
+                setTimeout(function() {
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                  console.log('🔗 Opened in new tab:', url);
+                }, 100);
+                
+              } else {
+                // For non-external links, just track normally
+                const trackingElement = element.closest('.btn-primary, .btn-secondary, .product-cta, [data-track-click]') || element;
+                const trackingUrl = url || trackingElement.getAttribute('href') || trackingElement.getAttribute('onclick') || 'tracked-click';
+                trackCTAClick(trackingElement, trackingUrl);
+              }
+            } else {
+              console.log('⏭️ Not tracking this click');
+            }
+          });
+          
+          console.log('✅ Universal click tracking initialized (event delegation)');
+        }
+        
+        // Set up click tracking immediately
+        setupClickTracking();
+        
+        // Track scroll depth for engagement metrics
+        let scrollDepthTracked = {
+          '25': false,
+          '50': false,
+          '75': false,
+          '100': false
+        };
+        
+        function trackScrollDepth() {
+          const scrollPercent = Math.round(
+            ((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100
+          );
+          
+          // Track milestones
+          ['25', '50', '75', '100'].forEach(function(milestone) {
+            const milestoneNum = parseInt(milestone);
+            if (scrollPercent >= milestoneNum && !scrollDepthTracked[milestone]) {
+              scrollDepthTracked[milestone] = true;
+              
+              const trackingParams = getTrackingParameters();
+              const abTestData = window.abTestData || {};
+              
+              const eventData = {
+                ...trackingParams,
+                article_id: '${article.id}',
+                article_slug: '${article.slug}',
+                scroll_depth: milestoneNum,
+                timestamp: new Date().toISOString()
+              };
+              
+              // Add A/B test context if available (including variant_name)
+              if (abTestData.currentVariant) {
+                eventData.variant_name = abTestData.currentVariant.name;
+                eventData.variant_id = abTestData.currentVariant.id;
+                eventData.is_control = abTestData.currentVariant.isControl;
+              }
+              if (abTestData.currentTest) {
+                eventData.test_name = abTestData.currentTest.name;
+                eventData.test_id = abTestData.currentTest.id;
+              }
+              
+              if (typeof mixpanel !== 'undefined' && mixpanel.track) {
+                mixpanel.track('Scroll Depth', eventData);
+                console.log('📊 Scroll depth tracked:', milestoneNum + '%');
+              }
+            }
+          });
+        }
+        
+        // Throttle scroll events
+        let scrollTimeout;
+        window.addEventListener('scroll', function() {
+          if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+          }
+          scrollTimeout = setTimeout(trackScrollDepth, 500);
+        });
+        
+        console.log('✅ Scroll depth tracking initialized');
       });
     </script>
     
@@ -901,34 +1096,49 @@ export async function generateHTML(article: ArticleData): Promise<string> {
       loadDynamicFooter();
     </script>
     
-    <!-- Analytics Loading (Footer) -->
+    <!-- Mixpanel Analytics (Official Snippet) -->
     ${article.id ? `
-    <script>
-      // Load Mixpanel asynchronously (non-blocking)
-      (function() {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
-        script.async = true;
-        script.onload = function() {
-          console.log('📦 Mixpanel script loaded');
-          if (typeof window.mixpanel !== 'undefined' && window.mixpanel.init) {
-            try {
-              window.mixpanel.init('e474bceac7e0d60bc3c4cb27aaf1d4f7', {
-                debug: false,
-                track_pageview: false,
-                persistence: 'localStorage',
-              });
-              console.log('✅ Mixpanel initialized (footer)');
-            } catch (error) {
-              console.log('❌ Mixpanel initialization failed:', error);
-            }
+    <script type="text/javascript">
+      (function(f,b){if(!b.__SV){var e,g,i,h;window.mixpanel=b;b._i=[];b.init=function(e,f,c){function g(a,d){var b=d.split(".");2==b.length&&(a=a[b[0]],d=b[1]);a[d]=function(){a.push([d].concat(Array.prototype.slice.call(arguments,0)))}}var a=b;"undefined"!==typeof c?a=b[c]=[]:c="mixpanel";a.people=a.people||[];a.toString=function(a){var d="mixpanel";"mixpanel"!==c&&(d+="."+c);a||(d+=" (stub)");return d};a.people.toString=function(){return a.toString(1)+".people (stub)"};i="disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" ");
+      for(h=0;h<i.length;h++)g(a,i[h]);var j="set set_once union unset remove delete".split(" ");a.get_group=function(){function b(c){d[c]=function(){call2_args=arguments;call2=[c].concat(Array.prototype.slice.call(call2_args,0));a.push([e,call2])}}for(var d={},e=["get_group"].concat(Array.prototype.slice.call(arguments,0)),c=0;c<j.length;c++)b(j[c]);return d};b._i.push([e,f,c])};b.__SV=1.2;e=f.createElement("script");e.type="text/javascript";e.async=!0;e.src="undefined"!==typeof MIXPANEL_CUSTOM_LIB_URL?MIXPANEL_CUSTOM_LIB_URL:"file:"===f.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\\/\\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";g=f.getElementsByTagName("script")[0];g.parentNode.insertBefore(e,g)}})(document,window.mixpanel||[]);
+      
+      // Initialize Mixpanel
+      mixpanel.init('e474bceac7e0d60bc3c4cb27aaf1d4f7', {
+        debug: false,
+        track_pageview: false,
+        persistence: 'localStorage',
+        loaded: function(mixpanel) {
+          console.log('✅ Mixpanel initialized successfully');
+          
+          // Track initial page view with full context including variant info
+          const trackingParams = getTrackingParameters();
+          const abTestData = window.abTestData || {};
+          
+          const pageViewData = {
+            ...trackingParams,
+            article_id: '${article.id}',
+            article_slug: '${article.slug}',
+            article_title: '${article.title.replace(/'/g, "\\'")}',
+            author: '${article.author}',
+            page_url: window.location.href,
+            page_path: window.location.pathname,
+            referrer: document.referrer,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Add variant info if available
+          if (abTestData.currentVariant) {
+            pageViewData.variant_name = abTestData.currentVariant.name;
+            pageViewData.variant_id = abTestData.currentVariant.id;
+            pageViewData.test_name = abTestData.currentTest ? abTestData.currentTest.name : null;
+            pageViewData.is_control = abTestData.currentVariant.isControl;
           }
-        };
-        script.onerror = function() {
-          console.log('❌ Failed to load Mixpanel script - continuing without it');
-        };
-        document.head.appendChild(script);
-      })();
+          
+          mixpanel.track('Article Page View', pageViewData);
+          
+          console.log('📊 Article page view tracked');
+        }
+      });
     </script>
     ` : ''}
     

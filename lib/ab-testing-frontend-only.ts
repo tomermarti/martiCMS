@@ -412,18 +412,18 @@ export function getPureStaticABTestingScript(articleId: string, articleSlug: str
         console.log('📦 Variant has template:', !!assignedVariant.template);
         console.log('📦 Variant has data:', !!assignedVariant.data);
         
-        // Apply variant content
-        if (!assignedVariant.isControl) {
-          // Handle template-based variants
-          if (assignedVariant.template && assignedVariant.data) {
-            applyVariantTemplate(assignedVariant);
-          }
-          // Handle simple change-based variants (backward compatibility)
-          else if (assignedVariant.changes) {
-            applyVariantChanges(assignedVariant.changes);
-          }
-        } else {
-          console.log('📝 Control variant - no changes applied');
+        // Apply variant content - FIXED: Apply templates for ANY variant that has template data
+        // Template-based variants (applies to both control and test variants)
+        if (assignedVariant.template && assignedVariant.data) {
+          applyVariantTemplate(assignedVariant);
+        }
+        // Simple change-based variants (backward compatibility - only for non-control variants)
+        else if (assignedVariant.changes && !assignedVariant.isControl) {
+          applyVariantChanges(assignedVariant.changes);
+        }
+        // Control variant without template or changes
+        else if (assignedVariant.isControl && !assignedVariant.template && (!assignedVariant.changes || Object.keys(assignedVariant.changes).length === 0)) {
+          console.log('📝 Control variant without template - keeping original content');
         }
         
         // Get all tracking parameters
