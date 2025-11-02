@@ -627,16 +627,26 @@ function VariantCreateModal({ articleId, variant, templates, onClose }: VariantC
         : `/api/articles/${articleId}/variants`
       const method = variant ? 'PUT' : 'POST'
 
+      console.log('Sending payload:', payload)
+      console.log('URL:', url, 'Method:', method)
+      
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+
       if (response.ok) {
+        const result = await response.json()
+        console.log('Success response:', result)
         onClose()
       } else {
+        console.log('Error response status:', response.status)
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.log('Error data:', errorData)
         alert(`Failed to save variant: ${errorData.error || errorData.message || 'Unknown error occurred'}`)
       }
     } catch (error) {

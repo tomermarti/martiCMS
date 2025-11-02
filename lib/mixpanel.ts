@@ -1,7 +1,17 @@
-import mixpanel from 'mixpanel-browser'
+// Dynamic import for mixpanel-browser to avoid SSR issues
+let mixpanel: any = null
 
 // Initialize Mixpanel
 const MIXPANEL_TOKEN = 'e474bceac7e0d60bc3c4cb27aaf1d4f7'
+
+// Load mixpanel only on client side
+if (typeof window !== 'undefined') {
+  import('mixpanel-browser').then((module) => {
+    mixpanel = module.default
+  }).catch((error) => {
+    console.error('Failed to load mixpanel-browser:', error)
+  })
+}
 
 // Track initialization state
 let isInitialized = false
@@ -31,6 +41,12 @@ if (typeof window !== 'undefined') {
 // Helper to ensure Mixpanel is initialized (only if consent is given)
 function ensureInitialized(): boolean {
   if (typeof window === 'undefined') return false
+  
+  // Check if mixpanel is loaded
+  if (!mixpanel) {
+    console.log('Mixpanel: Library not loaded yet')
+    return false
+  }
   
   // Check if analytics consent is given
   if (!hasAnalyticsConsent()) {
@@ -169,7 +185,7 @@ export function trackWithFullContext(eventName: string, properties: Record<strin
 export const analytics = {
   // Identify user
   identify: (userId: string, traits?: Record<string, any>) => {
-    if (typeof window === 'undefined') return
+    if (!ensureInitialized()) return
     mixpanel.identify(userId)
     if (traits) {
       mixpanel.people.set(traits)
@@ -237,19 +253,19 @@ export const analytics = {
 
   // Set user properties
   setUserProperties: (properties: Record<string, any>) => {
-    if (typeof window === 'undefined') return
+    if (!ensureInitialized()) return
     mixpanel.people.set(properties)
   },
 
   // Increment user property
   incrementUserProperty: (property: string, value: number = 1) => {
-    if (typeof window === 'undefined') return
+    if (!ensureInitialized()) return
     mixpanel.people.increment(property, value)
   },
 
   // Reset user (for logout)
   reset: () => {
-    if (typeof window === 'undefined') return
+    if (!ensureInitialized()) return
     mixpanel.reset()
   },
 }

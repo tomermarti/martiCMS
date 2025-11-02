@@ -48,7 +48,11 @@ export async function PUT(
 ) {
   try {
     const { id, variantId } = await params
-    const { name, description, templateId, isControl, trafficPercent, data, isActive } = await request.json()
+    const requestBody = await request.json()
+    console.log('PUT /api/articles/[id]/variants/[variantId] - Request body:', requestBody)
+    console.log('Article ID:', id, 'Variant ID:', variantId)
+    
+    const { name, description, templateId, isControl, trafficPercent, data, isActive } = requestBody
 
     // Validate traffic percentage if provided
     if (trafficPercent !== undefined && (trafficPercent < 0 || trafficPercent > 100)) {
@@ -143,6 +147,7 @@ export async function PUT(
       }
     }
 
+    console.log('Variant updated successfully:', variant.id)
     return NextResponse.json({
       success: true,
       message: 'Variant updated successfully!',

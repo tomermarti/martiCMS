@@ -33,11 +33,7 @@ const defaultTemplates = [
       
       <a href="{{ctaUrl}}" class="urgent-cta">{{cta}}</a>
       
-      <div class="trust-signals">
-        <div class="trust-item">✅ Free Shipping</div>
-        <div class="trust-item">✅ 30-Day Guarantee</div>
-        <div class="trust-item">✅ Secure Checkout</div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -277,10 +273,7 @@ const defaultTemplates = [
       
       <a href="{{ctaUrl}}" class="minimal-cta">{{cta}}</a>
       
-      <div class="guarantees">
-        <div class="guarantee">30-day money back guarantee</div>
-        <div class="guarantee">Free shipping worldwide</div>
-      </div>
+
     </div>
   </div>
 </div>

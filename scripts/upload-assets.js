@@ -5,6 +5,7 @@
  * This script uploads CSS, header, and footer files to make them available via CDN
  */
 
+import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -24,63 +24,345 @@
     </div>
 </footer>
 
-<!-- CCPA Cookie Consent Banner -->
-<div id="cookie-banner" class="cookie-banner" style="display: none;">
+<!-- Cookie Consent Banner - Glass View Design -->
+<div id="cookie-banner" class="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 999999;">
     <div class="cookie-banner-content">
         <div class="cookie-info">
-            <h3>🍪 We Value Your Privacy</h3>
             <p>
-                We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
-                <strong>By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong>
-                <br><br>
-                California residents have additional <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">CCPA privacy rights</a>.
+                We use cookies to enhance your experience. 
+                <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">Learn more</a>
             </p>
         </div>
         <div class="cookie-actions">
-            <button onclick="acceptCookies()" class="btn-primary btn-sm">Accept All</button>
-            <button onclick="rejectCookies()" class="btn-outlined btn-sm">Reject All</button>
+            <button type="button" onclick="rejectCookies(event)" class="btn-reject">Reject</button>
+            <button type="button" onclick="acceptCookies(event)" class="btn-accept">ACCEPT</button>
         </div>
     </div>
 </div>
 
+
 <script>
-// CCPA Cookie Consent Logic
+console.log('🍪🍪🍪 FOOTER SCRIPT LOADED - Cookie consent initialization starting...');
+
+// Cookie Consent Logic with Glass View Design
+let cookiePreferences = {
+    necessary: true,
+    analytics: false,
+    marketing: false,
+    personalization: false
+};
+
+console.log('🍪 Cookie preferences initialized:', cookiePreferences);
+
 function showCookieBanner() {
+    console.log('🍪 showCookieBanner called');
     const consent = localStorage.getItem('cookie-consent');
+    console.log('🍪 Existing consent:', consent);
+    
     if (!consent) {
-        document.getElementById('cookie-banner').style.display = 'block';
+        const banner = document.getElementById('cookie-banner');
+        console.log('🍪 Banner element found for showing:', !!banner);
+        
+        if (banner) {
+            // Get computed styles to debug
+            const computedStyle = window.getComputedStyle(banner);
+            console.log('🍪 BEFORE - Banner computed styles:', {
+                display: computedStyle.display,
+                visibility: computedStyle.visibility,
+                opacity: computedStyle.opacity,
+                zIndex: computedStyle.zIndex,
+                position: computedStyle.position,
+                bottom: computedStyle.bottom,
+                left: computedStyle.left,
+                right: computedStyle.right
+            });
+            
+            // Force show with maximum priority
+            banner.style.display = 'block';
+            banner.style.visibility = 'visible';
+            banner.style.opacity = '1';
+            banner.style.zIndex = '999999';
+            banner.style.position = 'fixed';
+            banner.style.bottom = '0';
+            banner.style.left = '0';
+            banner.style.right = '0';
+            banner.removeAttribute('hidden');
+            
+            // Check again after setting
+            const computedStyleAfter = window.getComputedStyle(banner);
+            console.log('🍪 AFTER - Banner computed styles:', {
+                display: computedStyleAfter.display,
+                visibility: computedStyleAfter.visibility,
+                opacity: computedStyleAfter.opacity,
+                zIndex: computedStyleAfter.zIndex,
+                position: computedStyleAfter.position
+            });
+            
+            // Check if banner is in viewport
+            const rect = banner.getBoundingClientRect();
+            console.log('🍪 Banner position in viewport:', {
+                top: rect.top,
+                bottom: rect.bottom,
+                left: rect.left,
+                right: rect.right,
+                width: rect.width,
+                height: rect.height,
+                isInViewport: rect.bottom > 0 && rect.top < window.innerHeight
+            });
+            
+            console.log('🍪 Banner shown with forced styles');
+        } else {
+            console.error('🍪 Banner element not found for showing!');
+            console.log('🍪 All elements with "cookie" in id or class:', 
+                Array.from(document.querySelectorAll('[id*="cookie"], [class*="cookie"]'))
+                    .map(el => ({ tag: el.tagName, id: el.id, class: el.className }))
+            );
+        }
+    } else {
+        console.log('🍪 Consent already exists, not showing banner');
+        // Load existing preferences
+        try {
+            cookiePreferences = JSON.parse(consent);
+            console.log('🍪 Loaded preferences:', cookiePreferences);
+        } catch (e) {
+            console.error('🍪 Error parsing cookie preferences:', e);
+        }
     }
 }
 
-function acceptCookies() {
-    localStorage.setItem('cookie-consent', JSON.stringify({
+function acceptCookies(e) {
+    console.log('🍪 acceptCookies function called');
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🍪 Event prevented and stopped');
+    }
+    
+    const allAccepted = {
         necessary: true,
         analytics: true,
         marketing: true,
         personalization: true
-    }));
-    localStorage.setItem('cookie-consent-date', new Date().toISOString());
-    document.getElementById('cookie-banner').style.display = 'none';
+    };
+    
+    try {
+        localStorage.setItem('cookie-consent', JSON.stringify(allAccepted));
+        localStorage.setItem('cookie-consent-date', new Date().toISOString());
+        console.log('🍪 Consent saved to localStorage');
+    } catch (error) {
+        console.error('🍪 Error saving to localStorage:', error);
+    }
+    
+    // Hide the banner immediately with multiple attempts
+    const banner = document.getElementById('cookie-banner');
+    console.log('🍪 Banner element found:', !!banner);
+    
+    if (banner) {
+        banner.style.display = 'none';
+        banner.style.visibility = 'hidden';
+        banner.style.opacity = '0';
+        banner.setAttribute('hidden', 'true');
+        console.log('🍪 Banner hidden with multiple methods');
+    } else {
+        console.error('🍪 Banner element not found!');
+    }
+    
+    // Also try to hide any other cookie banners
+    const allBanners = document.querySelectorAll('.cookie-banner, #cookie-banner, [class*="cookie"]');
+    allBanners.forEach((el, index) => {
+        if (el.style) {
+            el.style.display = 'none';
+            console.log(`🍪 Hidden additional banner ${index}`);
+        }
+    });
     
     // Initialize tracking scripts here if needed
     if (typeof initializeTracking === 'function') {
         initializeTracking();
     }
+    
+    console.log('✅ Cookies accepted - banner should be hidden');
+    return false;
 }
 
-function rejectCookies() {
-    localStorage.setItem('cookie-consent', JSON.stringify({
+function rejectCookies(e) {
+    console.log('🍪 rejectCookies function called');
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🍪 Event prevented and stopped');
+    }
+    
+    const onlyNecessary = {
         necessary: true,
         analytics: false,
         marketing: false,
         personalization: false
-    }));
-    localStorage.setItem('cookie-consent-date', new Date().toISOString());
-    document.getElementById('cookie-banner').style.display = 'none';
+    };
+    
+    try {
+        localStorage.setItem('cookie-consent', JSON.stringify(onlyNecessary));
+        localStorage.setItem('cookie-consent-date', new Date().toISOString());
+        console.log('🍪 Rejection saved to localStorage');
+    } catch (error) {
+        console.error('🍪 Error saving to localStorage:', error);
+    }
+    
+    // Hide the banner immediately with multiple attempts
+    const banner = document.getElementById('cookie-banner');
+    console.log('🍪 Banner element found:', !!banner);
+    
+    if (banner) {
+        banner.style.display = 'none';
+        banner.style.visibility = 'hidden';
+        banner.style.opacity = '0';
+        banner.setAttribute('hidden', 'true');
+        console.log('🍪 Banner hidden with multiple methods');
+    } else {
+        console.error('🍪 Banner element not found!');
+    }
+    
+    // Also try to hide any other cookie banners
+    const allBanners = document.querySelectorAll('.cookie-banner, #cookie-banner, [class*="cookie"]');
+    allBanners.forEach((el, index) => {
+        if (el.style) {
+            el.style.display = 'none';
+            console.log(`🍪 Hidden additional banner ${index}`);
+        }
+    });
+    
+    console.log('✅ Cookies rejected - banner should be hidden');
+    return false;
 }
 
-// Show banner on page load
-document.addEventListener('DOMContentLoaded', function() {
+
+// Debug function to check cookie banner state
+function debugCookieBanner() {
+    console.log('🔍 Cookie Banner Debug Info:');
+    const banner = document.getElementById('cookie-banner');
+    console.log('Banner element:', banner);
+    if (banner) {
+        console.log('Display:', banner.style.display);
+        console.log('Visibility:', banner.style.visibility);
+        console.log('Opacity:', banner.style.opacity);
+        console.log('Hidden attribute:', banner.hasAttribute('hidden'));
+        console.log('Computed style display:', window.getComputedStyle(banner).display);
+    }
+    console.log('LocalStorage consent:', localStorage.getItem('cookie-consent'));
+    console.log('All cookie-related elements:', document.querySelectorAll('[class*="cookie"], [id*="cookie"]'));
+}
+
+// Make debug function globally available
+window.debugCookieBanner = debugCookieBanner;
+
+// Make showCookieBanner globally available for manual triggering
+window.showCookieBanner = showCookieBanner;
+
+// Make accept/reject functions globally available
+window.acceptCookies = acceptCookies;
+window.rejectCookies = rejectCookies;
+
+// Show banner on page load - handle both cases (before and after DOMContentLoaded)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🍪 DOM loaded, initializing cookie banner');
+        showCookieBanner();
+    });
+} else {
+    // DOM already loaded, run immediately
+    console.log('🍪 DOM already loaded, initializing cookie banner immediately');
     showCookieBanner();
-});
+}
+
+// Also try showing after a small delay to ensure footer is fully injected
+setTimeout(function() {
+    console.log('🍪 Delayed check for cookie banner');
+    showCookieBanner();
+}, 500);
+
+// Additional aggressive check after 1 second
+setTimeout(function() {
+    console.log('🍪 Final aggressive check for cookie banner');
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) {
+        const banner = document.getElementById('cookie-banner');
+        if (banner) {
+            // Force show with maximum priority and all positioning
+            banner.style.display = 'block';
+            banner.style.visibility = 'visible';
+            banner.style.opacity = '1';
+            banner.style.zIndex = '999999';
+            banner.style.position = 'fixed';
+            banner.style.bottom = '0';
+            banner.style.left = '0';
+            banner.style.right = '0';
+            banner.style.width = '100%';
+            banner.removeAttribute('hidden');
+            
+            console.log('🍪 FORCED banner to show after 1 second with max z-index');
+            console.log('🍪 Banner final styles:', {
+                display: banner.style.display,
+                visibility: banner.style.visibility,
+                opacity: banner.style.opacity,
+                zIndex: banner.style.zIndex,
+                position: banner.style.position
+            });
+        } else {
+            console.error('🍪 Banner element STILL not found after 1 second!');
+        }
+    }
+}, 1000);
 </script>
+
+<style>
+/* Cookie Banner - Maximum Priority Positioning */
+#cookie-banner.cookie-banner {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 999999 !important;
+    width: 100% !important;
+}
+
+/* Black and White Cookie Button Styling - Override any existing styles */
+.btn-reject {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+    color: #000000 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    padding: 12px 28px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    min-width: 120px !important;
+}
+
+.btn-reject:hover {
+    background: #000000 !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-accept {
+    background: #000000 !important;
+    border: 2px solid #000000 !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    padding: 12px 32px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    min-width: 140px !important;
+}
+
+.btn-accept:hover {
+    background: #333333 !important;
+    border-color: #333333 !important;
+    transform: translateY(-2px) !important;
+}
+</style>

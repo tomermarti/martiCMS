@@ -83,6 +83,12 @@ export async function generateHTML(article: ArticleData): Promise<string> {
     
     ${article.canonicalUrl ? `<link rel="canonical" href="${article.canonicalUrl}" />` : ''}
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://daily.get.martideals.com/assets/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="https://daily.get.martideals.com/assets/martideals-logo.svg" />
+    <link rel="icon" type="image/png" href="https://daily.get.martideals.com/assets/marti_logo.png" />
+    <link rel="apple-touch-icon" href="https://daily.get.martideals.com/assets/marti_logo.png" />
+    
     <!-- Schema.org JSON-LD -->
     <script type="application/ld+json">
     {
@@ -985,7 +991,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
     </script>
     
     <!-- CDN Stylesheet with Cache Busting -->
-    <link rel="stylesheet" href="https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/assets/styles.css?v=${Date.now()}">
+    <link rel="stylesheet" href="https://daily.get.martideals.com/assets/styles.css?v=${Date.now()}">
     <!-- AB Testing Version Marker -->
     <meta name="ab-testing-version" content="${Date.now()}">
     
@@ -1012,7 +1018,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
       // Load dynamic header with version-based cache busting
       async function loadDynamicHeader() {
         // Try direct CDN first (skip version API for static sites)
-        const directUrl = 'https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/assets/header.html?v=' + Date.now();
+        const directUrl = 'https://daily.get.martideals.com/assets/header.html?v=' + Date.now();
         
         try {
           console.log('Loading header from CDN:', directUrl);
@@ -1034,7 +1040,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
         // If CDN fails, try version API (for CMS environment)
         try {
           console.log('Trying version API fallback...');
-          const versionResponse = await fetch('${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/layout/version');
+          const versionResponse = await fetch('http://localhost:3000/api/layout/version');
           const versionData = await versionResponse.json();
           
           // Load header with version parameter
@@ -1125,7 +1131,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
       // Load dynamic footer with version-based cache busting
       async function loadDynamicFooter() {
         // Try direct CDN first (skip version API for static sites)
-        const directUrl = 'https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/assets/footer.html?v=' + Date.now();
+        const directUrl = 'https://daily.get.martideals.com/assets/footer.html?v=' + Date.now();
         
         try {
           console.log('Loading footer from CDN:', directUrl);
@@ -1133,8 +1139,22 @@ export async function generateHTML(article: ArticleData): Promise<string> {
           
           if (response.ok) {
             const html = await response.text();
-            document.getElementById('dynamic-footer').innerHTML = html;
+            const footerContainer = document.getElementById('dynamic-footer');
+            footerContainer.innerHTML = html;
+            
+            // Execute scripts in the loaded HTML (innerHTML doesn't execute scripts)
+            const scripts = footerContainer.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+              const newScript = document.createElement('script');
+              Array.from(oldScript.attributes).forEach(attr => {
+                newScript.setAttribute(attr.name, attr.value);
+              });
+              newScript.textContent = oldScript.textContent;
+              oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+            
             console.log('Footer loaded successfully from CDN');
+            console.log('Footer scripts executed:', scripts.length);
             return;
           }
         } catch (error) {
@@ -1144,7 +1164,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
         // If CDN fails, try version API (for CMS environment)
         try {
           console.log('Trying footer version API fallback...');
-          const versionResponse = await fetch('${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/layout/version');
+          const versionResponse = await fetch('http://localhost:3000/api/layout/version');
           const versionData = await versionResponse.json();
           
           // Load footer with version parameter
@@ -1152,8 +1172,22 @@ export async function generateHTML(article: ArticleData): Promise<string> {
           const footerResponse = await fetch(footerUrl);
           const html = await footerResponse.text();
           
-          document.getElementById('dynamic-footer').innerHTML = html;
+          const footerContainer = document.getElementById('dynamic-footer');
+          footerContainer.innerHTML = html;
+          
+          // Execute scripts in the loaded HTML
+          const scripts = footerContainer.querySelectorAll('script');
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(attr => {
+              newScript.setAttribute(attr.name, attr.value);
+            });
+            newScript.textContent = oldScript.textContent;
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+          });
+          
           console.log('Footer loaded from version API');
+          console.log('Footer scripts executed:', scripts.length);
         } catch (error) {
           console.warn('Failed to load versioned footer, using final fallback:', error);
           // Fallback with timestamp
@@ -1161,35 +1195,43 @@ export async function generateHTML(article: ArticleData): Promise<string> {
           try {
             const response = await fetch(fallbackUrl);
             const html = await response.text();
-            document.getElementById('dynamic-footer').innerHTML = html;
+            const footerContainer = document.getElementById('dynamic-footer');
+            footerContainer.innerHTML = html;
+            
+            // Execute scripts in the loaded HTML
+            const scripts = footerContainer.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+              const newScript = document.createElement('script');
+              Array.from(oldScript.attributes).forEach(attr => {
+                newScript.setAttribute(attr.name, attr.value);
+              });
+              newScript.textContent = oldScript.textContent;
+              oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+            console.log('Footer fallback scripts executed:', scripts.length);
           } catch (fallbackError) {
             console.warn('Failed to load dynamic footer:', fallbackError);
-            // Final fallback footer - simple format with CCPA compliance
-            document.getElementById('dynamic-footer').innerHTML = \`
-              <footer class="site-footer">
-                <div class="footer-container">
-                    <!-- Editorial Note -->
-                    <div class="editorial-note">
-                        <p><strong>Editorial Note:</strong> We independently review all products. If you make a purchase through our links, we may receive a commission.</p>
-                    </div>
-                    
-                    <!-- Opt-in Disclaimer -->
-                    <div class="opt-in-disclaimer">
-                        <p>By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.</p>
-                    </div>
-                    <div class="footer-simple">
-                        <a href="https://www.martideals.com/assets/privacy-policy.html">Privacy Policy</a>
-                        <a href="https://www.martideals.com/assets/terms-of-service.html">Terms & Conditions</a>
-                        <a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a>
-                        <a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a>
-                        <a href="https://www.martideals.com/cookie-policy">Cookie Policy</a>
-                    </div>
-                    <div class="footer-copyright">
-                        <p>MartiDeals.com © 2025 All Rights Reserved</p>
-                    </div>
-                </div>
-              </footer>
-            \`;
+            // Final fallback footer - simple version without cookie banner (CDN should load)
+            document.getElementById('dynamic-footer').innerHTML = '<footer class="site-footer">' +
+              '<div class="footer-container">' +
+                '<div class="editorial-note">' +
+                  '<p><strong>Editorial Note:</strong> We independently review all products. If you make a purchase through our links, we may receive a commission.</p>' +
+                '</div>' +
+                '<div class="opt-in-disclaimer">' +
+                  '<p>By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.</p>' +
+                '</div>' +
+                '<div class="footer-simple">' +
+                  '<a href="https://www.martideals.com/assets/privacy-policy.html">Privacy Policy</a>' +
+                  '<a href="https://www.martideals.com/assets/terms-of-service.html">Terms & Conditions</a>' +
+                  '<a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a>' +
+                  '<a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a>' +
+                  '<a href="https://www.martideals.com/cookie-policy">Cookie Policy</a>' +
+                '</div>' +
+                '<div class="footer-copyright">' +
+                  '<p>MartiDeals.com © 2025 All Rights Reserved</p>' +
+                '</div>' +
+              '</div>' +
+            '</footer>';
             console.log('Final fallback footer loaded');
           }
         }
@@ -1245,68 +1287,8 @@ export async function generateHTML(article: ArticleData): Promise<string> {
     </script>
     ` : ''}
     
-    <!-- CCPA Cookie Consent Banner - Minimal Design -->
-    <div id="cookie-banner" class="cookie-banner" style="display: none;">
-        <div class="cookie-banner-content">
-            <div class="cookie-info">
-                <p>
-                    We use cookies to enhance your experience. 
-                    <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">Learn more</a>
-                </p>
-            </div>
-            <div class="cookie-actions">
-                <button type="button" onclick="rejectCookies(event)" class="btn btn-outlined btn-small">Reject</button>
-                <button type="button" onclick="acceptCookies(event)" class="btn btn-primary btn-small">Accept</button>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // CCPA Cookie Consent Logic
-        function showCookieBanner() {
-            const consent = localStorage.getItem('cookie-consent');
-            if (!consent) {
-                document.getElementById('cookie-banner').style.display = 'block';
-            }
-        }
-        
-        function acceptCookies(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            localStorage.setItem('cookie-consent', JSON.stringify({
-                necessary: true,
-                analytics: true,
-                marketing: true,
-                personalization: true
-            }));
-            localStorage.setItem('cookie-consent-date', new Date().toISOString());
-            document.getElementById('cookie-banner').style.display = 'none';
-            return false;
-        }
-        
-        function rejectCookies(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            localStorage.setItem('cookie-consent', JSON.stringify({
-                necessary: true,
-                analytics: false,
-                marketing: false,
-                personalization: false
-            }));
-            localStorage.setItem('cookie-consent-date', new Date().toISOString());
-            document.getElementById('cookie-banner').style.display = 'none';
-            return false;
-        }
-        
-        // Show banner on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            showCookieBanner();
-        });
-    </script>
+    <!-- Cookie consent is handled by the footer.html component -->
+
 </body>
 </html>`
 }
@@ -1633,7 +1615,7 @@ function getInlineStyles(): string {
     }
     
     .article-container {
-      max-width: 800px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 40px 20px;
       text-align: center;

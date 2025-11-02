@@ -1,11 +1,18 @@
 import '../global.css'
 import Footer from '@/components/Footer'
-import CookieConsent from '@/components/CookieConsent'
 import MixpanelProvider from '@/components/MixpanelProvider'
 
 export const metadata = {
   title: 'MartiCMS - Content Management System',
   description: 'Manage your articles and deploy to Digital Ocean Spaces',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/martideals-logo.svg', type: 'image/svg+xml' },
+      { url: '/marti_logo.png', type: 'image/png' },
+    ],
+    apple: '/marti_logo.png',
+  },
 }
 
 export default function RootLayout({
@@ -27,6 +34,7 @@ export default function RootLayout({
                 <div className="nav-links">
                   <a href="/" className="nav-link">📄 Articles</a>
                   <a href="/templates" className="nav-link">🎨 Templates</a>
+                  <a href="/layout-manager" className="nav-link">⚙️ Layout</a>
                 </div>
               </div>
             </nav>
@@ -35,7 +43,6 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
-          <CookieConsent />
         </MixpanelProvider>
         
       </body>
