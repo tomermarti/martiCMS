@@ -2,21 +2,13 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import ImageUpload from './ImageUpload'
+import VariantManager from './VariantManager'
 
 interface Article {
   id?: string
   slug: string
   title: string
-  metaTitle?: string
-  metaDescription?: string
-  author: string
-  featuredImage?: string
-  contentType: string
-  content: any
-  facebookPixel?: string
-  customScripts?: string
-  keywords?: string[]
+  author?: string
   canonicalUrl?: string
   published: boolean
 }
@@ -34,21 +26,10 @@ export default function ArticleForm({ article }: ArticleFormProps) {
   const [formData, setFormData] = useState<Article>({
     slug: article?.slug || '',
     title: article?.title || '',
-    metaTitle: article?.metaTitle || '',
-    metaDescription: article?.metaDescription || '',
-    author: article?.author || '',
-    featuredImage: article?.featuredImage || '',
-    contentType: article?.contentType || (article?.content as any)?.contentType || 'single_product',
-    content: article?.content || { contentType: 'single_product', product: {} },
-    facebookPixel: article?.facebookPixel || '',
-    customScripts: article?.customScripts || '',
-    keywords: article?.keywords || [],
+    author: article?.author || 'MartiCMS',
     canonicalUrl: article?.canonicalUrl || '',
     published: article?.published || false,
   })
-  
-  const [keywordInput, setKeywordInput] = useState('')
-  const [contentFields, setContentFields] = useState(formData.content)
 
   const generateSlug = (title: string) => {
     return title
@@ -79,64 +60,35 @@ export default function ArticleForm({ article }: ArticleFormProps) {
     }
   }
 
-  const handleContentTypeChange = (contentType: string) => {
-    let newContent: any = { contentType }
-    
-    if (contentType === 'single_product') {
-      newContent.product = {}
-    } else if (contentType === 'multiple_products') {
-      newContent.products = []
-      newContent.intro = ''
-    } else {
-      newContent.body = ''
-    }
-    
-    setContentFields(newContent)
-    setFormData({ ...formData, contentType, content: newContent })
-  }
-
-  const handleAddKeyword = () => {
-    if (keywordInput.trim()) {
-      const newKeywords = [...(formData.keywords || []), keywordInput.trim()]
-      setFormData({ ...formData, keywords: newKeywords })
-      setKeywordInput('')
-    }
-  }
-
-  const handleRemoveKeyword = (index: number) => {
-    const newKeywords = formData.keywords?.filter((_, i) => i !== index)
-    setFormData({ ...formData, keywords: newKeywords })
-  }
-
-  const handleProductAdd = () => {
-    const products = contentFields.products || []
-    setContentFields({
-      ...contentFields,
-      products: [...products, { title: '', description: '', productLink: '', image: '' }]
-    })
-  }
-
-  const handleProductRemove = (index: number) => {
-    const products = contentFields.products.filter((_: any, i: number) => i !== index)
-    setContentFields({ ...contentFields, products })
-  }
-
-  const handleProductChange = (index: number, field: string, value: string) => {
-    const products = [...contentFields.products]
-    products[index] = { ...products[index], [field]: value }
-    setContentFields({ ...contentFields, products })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
+      // Validate slug availability for new articles
+      if (!article) {
+        const isSlugAvailable = await checkSlugAvailability(formData.slug)
+        if (!isSlugAvailable) {
+          setError(`Slug "${formData.slug}" is already taken. Please choose a different one.`)
+          setLoading(false)
+          return
+        }
+      }
+
       const submitData = {
         ...formData,
         slug: slug || generateSlug(formData.title),
-        content: contentFields,
+        // Set default content structure for compatibility
+        contentType: 'template_based',
+        content: { contentType: 'template_based', note: 'Content managed via variants and templates' },
+        featuredImage: '', // Will be set via templates
+        facebookPixel: '', // Will be managed globally
+        customScripts: '', // Will be managed globally
+        // Set default SEO values
+        metaTitle: formData.title,
+        metaDescription: `${formData.title} - Discover amazing deals and products`,
+        keywords: []
       }
 
       const url = article?.id ? `/api/articles/${article.id}` : '/api/articles'
@@ -153,6 +105,11 @@ export default function ArticleForm({ article }: ArticleFormProps) {
         throw new Error(data.error || 'Failed to save article')
       }
 
+      // Show success and redirect to main screen
+      setError(null)
+      setLoading(false)
+      
+      // Redirect to articles list
       router.push('/')
       router.refresh()
     } catch (err: any) {
@@ -199,87 +156,57 @@ export default function ArticleForm({ article }: ArticleFormProps) {
 
       {/* Basic Information */}
       <div className="form-section">
-        <h2 className="form-section-title">Basic Information</h2>
+        <h2 className="form-section-title">📝 Article Settings</h2>
+        <p className="text-tertiary" style={{ marginBottom: 'var(--spacing-4)' }}>
+          Basic article information. All content (images, descriptions, etc.) will be managed through variants and templates.
+        </p>
         
         <div className="form-grid">
           <div className="form-group">
-            <label className="form-label">Title *</label>
+            <label className="form-label">Article Name *</label>
             <input
               type="text"
               className="form-input"
               value={formData.title}
               onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="e.g., Amazing Product Landing Page"
               required
             />
+            <small className="text-tertiary">
+              Internal name for this article (not shown to visitors)
+            </small>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Slug *</label>
+            <label className="form-label">URL Slug *</label>
             <input
               type="text"
               className="form-input"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
+              placeholder="amazing-product"
               required
               readOnly={!!article}
             />
             <small className="text-tertiary">
-              URL path: /{slug}/index.html
+              URL: https://daily.get.martideals.com/{slug}/index.html
             </small>
           </div>
         </div>
 
         <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Author *</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.author}
-              onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Content Type *</label>
-            <select
-              className="form-select"
-              value={formData.contentType}
-              onChange={(e) => handleContentTypeChange(e.target.value)}
-            >
-              <option value="single_product">Single Product</option>
-              <option value="multiple_products">Multiple Products</option>
-              <option value="blog">Blog Article</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* SEO & Meta */}
-      <div className="form-section">
-        <h2 className="form-section-title">SEO & Meta Information</h2>
-        
         <div className="form-group">
-          <label className="form-label">Meta Title</label>
+          <label className="form-label">Author</label>
           <input
             type="text"
             className="form-input"
-            value={formData.metaTitle}
-            onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-            placeholder="Leave empty to use article title"
+            value={formData.author}
+            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+            placeholder="MartiCMS"
           />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Meta Description</label>
-          <textarea
-            className="form-input"
-            value={formData.metaDescription}
-            onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-            rows={3}
-            placeholder="Brief description for search engines"
-          />
+          <small className="text-tertiary">
+            👤 Author name shown in article metadata and search results
+          </small>
         </div>
 
         <div className="form-group">
@@ -289,246 +216,48 @@ export default function ArticleForm({ article }: ArticleFormProps) {
             className="form-input"
             value={formData.canonicalUrl}
             onChange={(e) => setFormData({ ...formData, canonicalUrl: e.target.value })}
-            placeholder="https://example.com/article"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Keywords</label>
-          <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-            <input
-              type="text"
-              className="form-input"
-              value={keywordInput}
-              onChange={(e) => setKeywordInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddKeyword())}
-              placeholder="Add keyword and press Enter"
-            />
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleAddKeyword}
-            >
-              Add
-            </button>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)', marginTop: 'var(--spacing-2)' }}>
-            {formData.keywords?.map((keyword, index) => (
-              <span
-                key={index}
-                className="status-badge status-badge-info"
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleRemoveKeyword(index)}
-              >
-                {keyword} ×
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Featured Image */}
-      <div className="form-section">
-        <h2 className="form-section-title">Featured Image</h2>
-        <ImageUpload
-          slug={slug || 'temp'}
-          value={formData.featuredImage || ''}
-          onChange={(url) => setFormData({ ...formData, featuredImage: url })}
-        />
-      </div>
-
-      {/* Content */}
-      <div className="form-section">
-        <h2 className="form-section-title">Content</h2>
-        
-        {formData.contentType === 'single_product' && (
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Product Description</label>
-              <textarea
-                className="form-input"
-                value={contentFields.product?.description || ''}
-                onChange={(e) => setContentFields({
-                  ...contentFields,
-                  product: { ...contentFields.product, description: e.target.value }
-                })}
-                rows={6}
-                placeholder="Describe the product..."
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Product Link</label>
-              <input
-                type="url"
-                className="form-input"
-                value={contentFields.product?.productLink || ''}
-                onChange={(e) => setContentFields({
-                  ...contentFields,
-                  product: { ...contentFields.product, productLink: e.target.value }
-                })}
-                placeholder="https://amazon.com/..."
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">CTA Button Text</label>
-              <input
-                type="text"
-                className="form-input"
-                value={contentFields.product?.ctaText || ''}
-                onChange={(e) => setContentFields({
-                  ...contentFields,
-                  product: { ...contentFields.product, ctaText: e.target.value }
-                })}
-                placeholder="View Product"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Rating (1-5)</label>
-              <input
-                type="number"
-                min="1"
-                max="5"
-                className="form-input"
-                value={contentFields.product?.rating || ''}
-                onChange={(e) => setContentFields({
-                  ...contentFields,
-                  product: { ...contentFields.product, rating: parseInt(e.target.value) }
-                })}
-              />
-            </div>
-          </div>
-        )}
-
-        {formData.contentType === 'multiple_products' && (
-          <>
-            <div className="form-group">
-              <label className="form-label">Introduction</label>
-              <textarea
-                className="form-input"
-                value={contentFields.intro || ''}
-                onChange={(e) => setContentFields({ ...contentFields, intro: e.target.value })}
-                rows={4}
-                placeholder="Introduction text..."
-              />
-            </div>
-
-            <div style={{ marginTop: 'var(--spacing-6)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-4)' }}>
-                <h3>Products</h3>
-                <button type="button" className="btn btn-secondary" onClick={handleProductAdd}>
-                  + Add Product
-                </button>
-              </div>
-
-              {(contentFields.products || []).map((product: any, index: number) => (
-                <div key={index} className="card" style={{ marginBottom: 'var(--spacing-4)', padding: 'var(--spacing-4)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-3)' }}>
-                    <h4>Product {index + 1}</h4>
-                    <button
-                      type="button"
-                      className="btn btn-error btn-small"
-                      onClick={() => handleProductRemove(index)}
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="form-grid">
-                    <div className="form-group">
-                      <label className="form-label">Title</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={product.title || ''}
-                        onChange={(e) => handleProductChange(index, 'title', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Product Link</label>
-                      <input
-                        type="url"
-                        className="form-input"
-                        value={product.productLink || ''}
-                        onChange={(e) => handleProductChange(index, 'productLink', e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-input"
-                      value={product.description || ''}
-                      onChange={(e) => handleProductChange(index, 'description', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Image URL</label>
-                    <ImageUpload
-                      slug={slug || 'temp'}
-                      value={product.image || ''}
-                      onChange={(url) => handleProductChange(index, 'image', url)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {formData.contentType === 'blog' && (
-          <div className="form-group">
-            <label className="form-label">Article Body</label>
-            <textarea
-              className="form-input"
-              value={contentFields.body || ''}
-              onChange={(e) => setContentFields({ ...contentFields, body: e.target.value })}
-              rows={15}
-              placeholder="Write your article content here..."
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Scripts & Tracking */}
-      <div className="form-section">
-        <h2 className="form-section-title">Scripts & Tracking</h2>
-        
-        <div className="form-group">
-          <label className="form-label">Facebook Pixel ID</label>
-          <input
-            type="text"
-            className="form-input"
-            value={formData.facebookPixel}
-            onChange={(e) => setFormData({ ...formData, facebookPixel: e.target.value })}
-            placeholder="1234567890"
+            placeholder="https://example.com/original-article"
           />
           <small className="text-tertiary">
-            Enter your Facebook Pixel ID (numbers only)
-          </small>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Custom Scripts</label>
-          <textarea
-            className="form-input"
-            value={formData.customScripts}
-            onChange={(e) => setFormData({ ...formData, customScripts: e.target.value })}
-            rows={8}
-            placeholder="<script>...</script>"
-            style={{ fontFamily: 'monospace' }}
-          />
-          <small className="text-tertiary">
-            Add custom JavaScript or tracking codes (Google Analytics, Mixpanel, etc.)
+            🔗 Optional: If this content was originally published elsewhere, add the original URL to avoid duplicate content penalties
           </small>
         </div>
       </div>
+
+      </div>
+
+
+      {/* Note about content management */}
+      <div className="form-section">
+        <div className="info-banner">
+          <h3>📄 Content Management</h3>
+          <p>
+            All content (images, text, CTAs, etc.) is now managed through <strong>Templates</strong> and <strong>Variants</strong> below. 
+            This allows for powerful A/B testing and dynamic content without editing the article directly.
+          </p>
+          <div className="info-actions">
+            <a href="/templates" target="_blank" className="btn btn-outlined btn-small">
+              📄 Manage Templates
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Variant Management */}
+      {article?.id && (
+        <div className="form-section">
+          <h2 className="form-section-title">🎯 AB Testing Variants</h2>
+          <p className="text-tertiary" style={{ marginBottom: 'var(--spacing-4)' }}>
+            Create different versions of this article to test what performs best. 
+            <a href="/templates" target="_blank" style={{ color: 'var(--primary-color)', marginLeft: '8px' }}>
+              Manage Templates →
+            </a>
+          </p>
+          <VariantManager 
+            articleId={article.id}
+          />
+        </div>
+      )}
 
       {/* Actions */}
       <div className="form-section">
@@ -557,7 +286,7 @@ export default function ArticleForm({ article }: ArticleFormProps) {
             className="btn btn-primary"
             disabled={loading}
           >
-            {loading ? 'Saving...' : article ? 'Update Article' : 'Create Article'}
+{loading ? 'Publishing...' : article ? 'Update & Publish' : 'Create Article'}
           </button>
 
           <button
@@ -584,5 +313,51 @@ export default function ArticleForm({ article }: ArticleFormProps) {
       </div>
     </form>
   )
+}
+
+// Add CSS for the info banner
+const styles = `
+.info-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.info-banner h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
+}
+
+.info-banner p {
+  margin: 0 0 20px 0;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+.info-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.info-banner .btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+}
+
+.info-banner .btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+`
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style')
+  styleSheet.textContent = styles
+  document.head.appendChild(styleSheet)
 }
 

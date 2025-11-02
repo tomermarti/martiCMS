@@ -1,12 +1,45 @@
-export const metadata = {
-  title: 'CCPA Privacy Rights - MartiDeals',
-  description: 'Your California Consumer Privacy Act (CCPA) rights and how to exercise them at MartiDeals.',
-}
+'use client'
+
+import { useEffect } from 'react'
 
 export default function CCPAPrivacyRights() {
+  useEffect(() => {
+    // Add the handleOptOut function to window object
+    (window as any).handleOptOut = function() {
+      // Set opt-out preference
+      localStorage.setItem('ccpa-opt-out', 'true');
+      localStorage.setItem('ccpa-opt-out-date', new Date().toISOString());
+      
+      // Update cookie consent to reject marketing cookies
+      const consent = {
+        necessary: true,
+        analytics: false,
+        marketing: false,
+        personalization: false
+      };
+      localStorage.setItem('cookie-consent', JSON.stringify(consent));
+      localStorage.setItem('cookie-consent-date', new Date().toISOString());
+      
+      // Show confirmation
+      alert('Your opt-out preference has been saved. Marketing cookies have been disabled.');
+      
+      // Optionally reload the page to apply changes
+      window.location.reload();
+    };
+
+    (window as any).handleOptIn = function() {
+      // Remove opt-out preference
+      localStorage.removeItem('ccpa-opt-out');
+      localStorage.removeItem('ccpa-opt-out-date');
+      
+      // Show confirmation
+      alert('Your opt-in preference has been saved. You can manage cookie preferences through our cookie banner.');
+    };
+  }, []);
   return (
-    <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '0 var(--spacing-4)' }}>
-      <div className="privacy-page">
+    <div className="main-content">
+      <div className="page-container">
+        <div className="privacy-page">
         <header className="page-header">
           <h1>California Consumer Privacy Act (CCPA) Rights</h1>
           <p className="last-updated">Last Updated: October 27, 2025</p>
@@ -132,7 +165,7 @@ export default function CCPAPrivacyRights() {
             </p>
             
             <div className="opt-out-form">
-              <button className="btn btn-primary btn-large opt-out-btn" onclick="handleOptOut()">
+              <button className="btn btn-primary btn-large opt-out-btn" onClick={() => (window as any).handleOptOut()}>
                 🔒 Do Not Sell or Share My Personal Information
               </button>
               <p className="form-note">
@@ -152,28 +185,6 @@ export default function CCPAPrivacyRights() {
               </ul>
             </div>
 
-            <script>
-              function handleOptOut() {
-                // Set opt-out preference
-                localStorage.setItem('ccpa-opt-out', 'true');
-                localStorage.setItem('ccpa-opt-out-date', new Date().toISOString());
-                
-                // Update cookie consent to reject marketing cookies
-                const consent = {
-                  necessary: true,
-                  analytics: false,
-                  marketing: false,
-                  personalization: false
-                };
-                localStorage.setItem('cookie-consent', JSON.stringify(consent));
-                
-                // Show confirmation
-                alert('✅ Your opt-out request has been processed. You have been opted out of the sale and sharing of your personal information.');
-                
-                // Optionally reload page to apply changes
-                window.location.reload();
-              }
-            </script>
           </section>
 
           <section>
@@ -227,6 +238,7 @@ export default function CCPAPrivacyRights() {
           </section>
         </div>
       </div>
+    </div>
 
       <style jsx>{`
         .privacy-page {

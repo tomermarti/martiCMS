@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
     
     // If published, generate and upload HTML
     if (data.published) {
-      const html = generateHTML({
+      const html = await generateHTML({
         ...data,
         slug: article.slug,
         publishedAt: article.publishedAt?.toISOString(),
       })
       
-      await uploadArticle(article.slug, html)
+      await uploadArticle(article.slug, html, true)
     }
     
     return NextResponse.json(article)

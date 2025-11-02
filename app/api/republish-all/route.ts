@@ -22,24 +22,24 @@ export async function POST(request: NextRequest) {
         console.log(`🔄 Republishing: ${article.title} (${article.slug})`)
         
         // Generate new HTML with updated template
-        const html = generateHTML({
+        const html = await generateHTML({
+          id: article.id,
           slug: article.slug,
           title: article.title,
-          metaTitle: article.metaTitle,
-          metaDescription: article.metaDescription,
+          metaTitle: article.metaTitle || undefined,
+          metaDescription: article.metaDescription || undefined,
           author: article.author,
-          featuredImage: article.featuredImage,
-          contentType: article.contentType,
+          featuredImage: article.featuredImage || undefined,
           content: article.content,
-          facebookPixel: article.facebookPixel,
-          customScripts: article.customScripts,
-          keywords: article.keywords,
-          canonicalUrl: article.canonicalUrl,
+          facebookPixel: article.facebookPixel || undefined,
+          customScripts: article.customScripts || undefined,
+          keywords: article.keywords || undefined,
+          canonicalUrl: article.canonicalUrl || undefined,
           publishedAt: article.publishedAt?.toISOString(),
         })
         
-        // Upload to CDN
-        await uploadArticle(article.slug, html)
+        // Upload to CDN with cache busting
+        await uploadArticle(article.slug, html, true)
         
         results.push({
           slug: article.slug,

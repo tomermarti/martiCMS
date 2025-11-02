@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
     const { type, timestamp } = await request.json()
     
     if (type === 'header' || type === 'footer' || type === 'css') {
-      layoutVersions[type] = timestamp || Date.now()
-      console.log(`📝 Updated ${type} version to:`, layoutVersions[type])
+      layoutVersions[type as keyof typeof layoutVersions] = timestamp || Date.now()
+      console.log(`📝 Updated ${type} version to:`, layoutVersions[type as keyof typeof layoutVersions])
     }
     
     return NextResponse.json({

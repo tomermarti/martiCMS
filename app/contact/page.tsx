@@ -1,12 +1,10 @@
-export const metadata = {
-  title: 'Contact Us - MartiDeals',
-  description: 'Get in touch with MartiDeals. We\'re here to help with questions, support, and feedback.',
-}
+'use client'
 
 export default function Contact() {
   return (
-    <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '0 var(--spacing-4)' }}>
-      <div className="contact-page">
+    <div className="main-content">
+      <div className="page-container">
+        <div className="contact-page">
         <header className="page-header">
           <h1>Contact Us</h1>
           <p className="subtitle">We're here to help! Get in touch with our team</p>
@@ -183,6 +181,7 @@ export default function Contact() {
           </section>
         </div>
       </div>
+    </div>
 
       <style jsx>{`
         .contact-page {

@@ -12,15 +12,14 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
     redirect('/')
   }
 
-  // Convert null values to undefined for compatibility with ArticleForm
+  // Convert to simplified article format for the new form
   const articleForForm = {
-    ...article,
-    metaTitle: article.metaTitle ?? undefined,
-    metaDescription: article.metaDescription ?? undefined,
-    featuredImage: article.featuredImage ?? undefined,
-    facebookPixel: article.facebookPixel ?? undefined,
-    customScripts: article.customScripts ?? undefined,
+    id: article.id,
+    slug: article.slug,
+    title: article.title,
+    author: article.author ?? 'MartiCMS',
     canonicalUrl: article.canonicalUrl ?? undefined,
+    published: article.published,
   }
 
   return (

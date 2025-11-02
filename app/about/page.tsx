@@ -1,12 +1,10 @@
-export const metadata = {
-  title: 'About Us - MartiDeals',
-  description: 'Learn about MartiDeals - your trusted source for the best deals and shopping experiences online.',
-}
+'use client'
 
 export default function AboutUs() {
   return (
-    <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '0 var(--spacing-4)' }}>
-      <div className="about-page">
+    <div className="main-content">
+      <div className="page-container">
+        <div className="about-page">
         <header className="page-header">
           <h1>About MartiDeals</h1>
           <p className="subtitle">Your trusted source for the best deals and shopping experiences</p>
@@ -157,6 +155,7 @@ export default function AboutUs() {
           </section>
         </div>
       </div>
+    </div>
 
       <style jsx>{`
         .about-page {

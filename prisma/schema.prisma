@@ -34,6 +34,10 @@ model Article {
   published     Boolean  @default(false)
   publishedAt   DateTime?
   
+  // A/B Testing & Variants
+  abTests       ABTest[]
+  variants      ArticleVariant[]
+  
   // Timestamps
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -41,5 +45,259 @@ model Article {
   @@index([slug])
   @@index([published])
   @@index([createdAt])
+}
+
+model ABTest {
+  id            String   @id @default(cuid())
+  name          String   // Test name (e.g., "Headline Test - Q4 2025")
+  description   String?  // Optional description of what you're testing
+  
+  // Article relationship
+  articleId     String   // ID of the article being tested
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  // Test configuration
+  status        String   @default("draft") // Test status: 'draft', 'running', 'paused', 'completed'
+  testType      String   // What you're testing: 'headline', 'cta', 'image', 'layout', 'full_page'
+  
+  // Traffic distribution
+  distributionMode String @default("manual") // 'manual' (you set %) or 'auto_pilot' (system optimizes)
+  
+  // Variants (the different versions you're testing)
+  variants      ABVariant[]
+  
+  // Auto-pilot settings (only used when distributionMode = 'auto_pilot')
+  optimizationGoal String? // What to optimize for: 'conversions', 'engagement', 'time_on_page', 'click_through'
+  minSampleSize    Int     @default(100) // Minimum views before auto-optimization starts
+  confidenceLevel  Float   @default(0.95) // Statistical confidence level (0.95 = 95%)
+  
+  // Test duration (optional - can set start/end dates)
+  startDate     DateTime? // When test should start (null = start immediately)
+  endDate       DateTime? // When test should end (null = run indefinitely)
+  
+  // Winner tracking
+  winningVariantId String? // ID of the winning variant (set by auto-pilot or manually)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([articleId])
+  @@index([status])
+  @@index([startDate])
+}
+
+model ABVariant {
+  id            String   @id @default(cuid())
+  name          String   // Variant name (e.g., "Control", "Variant A", "Red Button")
+  description   String?  // Optional description of this variant
+  
+  // Test relationship
+  testId        String   // ID of the test this variant belongs to
+  test          ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+  
+  // Traffic allocation
+  trafficPercent Float   @default(0) // Percentage of traffic (0-100) that sees this variant
+  isControl     Boolean  @default(false) // True for the original/control version
+  
+  // Variant content (what's different from control) - JSON structure varies by test type:
+  changes       Json     
+  /* EXAMPLES OF CHANGES JSON BY TEST TYPE:
+  
+  HEADLINE TEST:
+  {
+    "title": "New Headline Text",
+    "metaTitle": "New Meta Title for SEO"
+  }
+  
+  CTA TEST:
+  {
+    "ctaText": "Buy Now",
+    "ctaColor": "#FF0000",
+    "ctaPosition": "top"
+  }
+  
+  IMAGE TEST:
+  {
+    "featuredImage": "https://example.com/new-image.jpg"
+  }
+  
+  LAYOUT TEST:
+  {
+    "layout": "grid"  // Options: "grid", "list", "masonry", "full-width"
+  }
+  
+  FULL PAGE TEST:
+  {
+    "title": "Complete New Title",
+    "featuredImage": "https://example.com/image.jpg",
+    "content": {
+      "products": [...],
+      "sections": [...],
+      "customHTML": "<div>Custom content</div>"
+    },
+    "layout": "grid",
+    "ctaText": "Shop Now",
+    "ctaColor": "#00FF00",
+    "customCSS": ".article { background: blue; }"
+  }
+  */
+  
+  // Performance metrics (automatically updated by the system)
+  views         Int      @default(0)      // How many people saw this variant
+  conversions   Int      @default(0)      // How many converted (clicked CTA, bought, etc.)
+  conversionRate Float   @default(0)      // conversions / views * 100
+  avgTimeOnPage Float    @default(0)      // Average seconds spent on page
+  bounceRate    Float    @default(0)      // Percentage who left immediately
+  clicks        Int      @default(0)      // Total clicks on CTAs/links
+  clickThroughRate Float @default(0)      // clicks / views * 100
+  
+  // Statistical significance (automatically calculated)
+  isSignificant Boolean  @default(false)  // True if results are statistically significant
+  pValue        Float?                    // P-value from statistical test
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([testId])
+  @@index([trafficPercent])
+}
+
+model ABTestEvent {
+  id            String   @id @default(cuid())
+  
+  // Test & Variant identification
+  testId        String   // Which test this event belongs to
+  variantId     String   // Which variant the user saw
+  
+  // User identification
+  userId        String?  // User ID if logged in (optional)
+  sessionId     String   // Anonymous session ID for tracking across page views
+  
+  // Event details
+  eventType     String   // Type of event: 'view', 'click', 'conversion', 'bounce', 'exit'
+  eventData     Json?    // Additional event metadata (varies by event type)
+  /* EXAMPLES OF EVENT DATA:
+  
+  VIEW EVENT:
+  { "page_url": "/article/123", "referrer": "google.com" }
+  
+  CLICK EVENT:
+  { "clickTarget": "cta_button", "buttonText": "Buy Now", "position": "top" }
+  
+  CONVERSION EVENT:
+  { "conversionType": "purchase", "amount": 99.99, "productId": "abc123" }
+  
+  EXIT EVENT:
+  { "timeOnPage": 45.2, "scrollDepth": 75 }
+  */
+  
+  // Context information (automatically captured)
+  userAgent     String?  // Browser user agent string
+  referrer      String?  // Where user came from
+  deviceType    String?  // Device type: 'mobile', 'tablet', 'desktop'
+  
+  // Timestamp
+  createdAt     DateTime @default(now())
+  
+  @@index([testId, variantId])  // Query events by test and variant
+  @@index([sessionId])          // Query events by user session
+  @@index([eventType])          // Query events by type
+  @@index([createdAt])          // Query events by date
+}
+
+model Template {
+  id            String   @id @default(cuid())
+  name          String   // Template name (e.g., "Urgent Sale Layout", "Minimal Product")
+  description   String?  // Description of what this template is for
+  
+  // Template content
+  htmlContent   String   // HTML template with {{placeholders}}
+  category      String   @default("custom") // 'single_product', 'multiple_products', 'blog', 'custom'
+  
+  // Template metadata
+  placeholders  String[] // List of available placeholders: ['title', 'image', 'cta', 'ctaUrl', 'price']
+  previewImage  String?  // Screenshot/preview of the template
+  
+  // Usage tracking
+  isActive      Boolean  @default(true)
+  usageCount    Int      @default(0) // How many articles use this template
+  
+  // Relationships
+  variants      ArticleVariant[]
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([category])
+  @@index([isActive])
+}
+
+model ArticleVariant {
+  id            String   @id @default(cuid())
+  name          String   // Variant name (e.g., "Control", "Urgent Version", "Minimal Design")
+  description   String?  // What makes this variant different
+  
+  // Article relationship
+  articleId     String
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  // Template relationship
+  templateId    String?  // Optional: if using a template
+  template      Template? @relation(fields: [templateId], references: [id])
+  
+  // Variant configuration
+  isControl     Boolean  @default(false) // True for the original/default variant
+  trafficPercent Float   @default(50)    // Percentage of traffic for AB testing
+  
+  // Content data (fills template placeholders or overrides article content)
+  data          Json     // Data to fill template placeholders
+  /* EXAMPLES OF DATA JSON:
+  
+  TEMPLATE-BASED VARIANT:
+  {
+    "title": "🔥 Flash Sale: 70% OFF!",
+    "image": "https://example.com/urgent-sale.jpg",
+    "cta": "GRAB DEAL NOW",
+    "ctaColor": "#ff4444",
+    "price": "$29.99",
+    "originalPrice": "$99.99",
+    "urgencyText": "Only 24 hours left!",
+    "testimonials": ["Amazing product!", "Best purchase ever!"]
+  }
+  
+  CONTENT OVERRIDE VARIANT:
+  {
+    "contentType": "single_product",
+    "content": {
+      "product": {
+        "title": "Different Product Title",
+        "description": "Completely different description...",
+        "ctaText": "Buy Different",
+        "rating": 5
+      }
+    },
+    "featuredImage": "https://example.com/different-image.jpg"
+  }
+  */
+  
+  // Performance tracking
+  views         Int      @default(0)
+  conversions   Int      @default(0)
+  conversionRate Float   @default(0)
+  
+  // Status
+  isActive      Boolean  @default(true)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([articleId])
+  @@index([templateId])
+  @@index([isControl])
+  @@index([isActive])
 }
 

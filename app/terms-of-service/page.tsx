@@ -1,12 +1,10 @@
-export const metadata = {
-  title: 'Terms of Service - MartiDeals',
-  description: 'Terms and conditions for using MartiDeals services and website.',
-}
+'use client'
 
 export default function TermsOfService() {
   return (
-    <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '0 var(--spacing-4)' }}>
-      <div className="terms-page">
+    <div className="main-content">
+      <div className="page-container">
+        <div className="terms-page">
         <header className="page-header">
           <h1>Terms of Service</h1>
           <p className="last-updated">Last Updated: October 27, 2025</p>
@@ -170,6 +168,7 @@ export default function TermsOfService() {
           </section>
         </div>
       </div>
+    </div>
 
       <style jsx>{`
         .terms-page {

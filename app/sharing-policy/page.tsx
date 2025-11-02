@@ -1,7 +1,4 @@
-export const metadata = {
-  title: 'Data Sharing Policy - MartiDeals',
-  description: 'Learn how MartiDeals shares information with third parties and protects your data.',
-}
+'use client'
 
 export default function SharingPolicy() {
   return (

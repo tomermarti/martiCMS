@@ -1,6 +1,7 @@
 import '../global.css'
 import Footer from '@/components/Footer'
 import CookieConsent from '@/components/CookieConsent'
+import MixpanelProvider from '@/components/MixpanelProvider'
 
 export const metadata = {
   title: 'MartiCMS - Content Management System',
@@ -15,13 +16,28 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="app-container">
-          <main className="main-content">
-            {children}
-          </main>
-          <Footer />
-        </div>
-        <CookieConsent />
+        <MixpanelProvider>
+          <div className="app-container">
+            <nav className="main-nav">
+              <div className="nav-container">
+                <a href="/" className="nav-logo">
+                  <img src="/marti_logo.png" alt="Marti Logo" className="logo-img" />
+                  MartiCMS
+                </a>
+                <div className="nav-links">
+                  <a href="/" className="nav-link">📄 Articles</a>
+                  <a href="/templates" className="nav-link">🎨 Templates</a>
+                </div>
+              </div>
+            </nav>
+            <main className="main-content">
+              {children}
+            </main>
+            <Footer />
+          </div>
+          <CookieConsent />
+        </MixpanelProvider>
+        
       </body>
     </html>
   )

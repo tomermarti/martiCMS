@@ -58,9 +58,25 @@ export async function listFiles(prefix: string) {
   return response.Contents || []
 }
 
-export async function uploadArticle(slug: string, htmlContent: string) {
+export async function uploadArticle(slug: string, htmlContent: string, forceCacheBust = false) {
   const key = `${slug}/index.html`
-  return uploadFile(key, htmlContent, 'text/html; charset=utf-8')
+  return uploadFile(key, htmlContent, 'text/html; charset=utf-8', forceCacheBust)
+}
+
+export async function uploadABTestJSON(slug: string, jsonContent: string) {
+  const key = `${slug}/ab-tests.json`
+  return uploadFile(key, jsonContent, 'application/json', true) // Always cache-bust for fresh data
+}
+
+export async function deleteABTestJSON(slug: string) {
+  const key = `${slug}/ab-tests.json`
+  try {
+    await deleteFile(key)
+    console.log(`✅ Deleted A/B test JSON: ${key}`)
+  } catch (error) {
+    // File might not exist, that's okay
+    console.log(`📝 No A/B test JSON to delete: ${key}`)
+  }
 }
 
 export async function uploadArticleImage(slug: string, imageName: string, imageBuffer: Buffer, contentType: string) {

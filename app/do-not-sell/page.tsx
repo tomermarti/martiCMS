@@ -120,8 +120,9 @@ export default function DoNotSell() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '600px', margin: '0 auto', padding: '0 var(--spacing-4)' }}>
-      <div className="do-not-sell-page">
+    <div className="main-content">
+      <div className="page-container">
+        <div className="do-not-sell-page">
         <header className="page-header">
           <h1>Do Not Sell or Share My Personal Information</h1>
         </header>
@@ -172,6 +173,7 @@ export default function DoNotSell() {
           )}
         </div>
       </div>
+    </div>
 
       <style jsx>{`
         .do-not-sell-page {

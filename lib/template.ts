@@ -1,6 +1,10 @@
 import { processCTAUrl } from './url-utils'
+import { getPureStaticABTestingScript } from './ab-testing-frontend-only'
+import { prisma } from './prisma'
+import { uploadFile } from './spaces'
 
 interface ArticleData {
+  id?: string
   title: string
   metaTitle?: string
   metaDescription?: string
@@ -15,9 +19,43 @@ interface ArticleData {
   publishedAt?: string
 }
 
-export function generateHTML(article: ArticleData): string {
+export async function generateHTML(article: ArticleData): Promise<string> {
   const content = article.content as any
   const currentYear = new Date().getFullYear()
+  
+  // Fetch active variants for this article
+  let embeddedVariants: any[] = []
+  if (article.id) {
+    try {
+      const variants = await prisma.articleVariant.findMany({
+        where: { 
+          articleId: article.id,
+          isActive: true
+        },
+        include: {
+          template: {
+            select: {
+              id: true,
+              name: true,
+              category: true,
+              placeholders: true,
+              htmlContent: true
+            }
+          }
+        },
+        orderBy: [
+          { isControl: 'desc' },
+          { createdAt: 'asc' }
+        ]
+      })
+      embeddedVariants = variants
+    } catch (error) {
+      console.error('Error fetching variants for HTML generation:', error)
+    }
+  }
+  
+  // Serialize variants for embedding in HTML (escape for safe HTML embedding)
+  const variantsJson = JSON.stringify(embeddedVariants, null, 0)
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -82,6 +120,496 @@ export function generateHTML(article: ArticleData): string {
     
     <!-- Custom Scripts Placeholder -->
     ${article.customScripts || '<!-- Custom scripts: Add in CMS -->'}
+    
+    <!-- AB Testing Logic in Header (Early Loading) -->
+    ${article.id ? `
+    <script>
+      console.log('🚀 AB Testing Header - Article ID: ${article.id}, Slug: ${article.slug}');
+      
+      // Global AB Testing Data
+      window.abTestData = {
+        articleId: '${article.id}',
+        articleSlug: '${article.slug}',
+        currentTest: null,
+        currentVariant: null,
+        isReady: false,
+        embeddedVariants: []
+      };
+
+      // Extract ALL URL parameters and tracking data - no limitations
+      function getTrackingParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const trackingData = {};
+        
+        // Parse ALL URL parameters - no filtering
+        for (const [key, value] of urlParams.entries()) {
+          trackingData[key] = value;
+        }
+        
+        // Add referrer information
+        if (document.referrer) {
+          trackingData.page_referrer = document.referrer;
+          try {
+            const referrerUrl = new URL(document.referrer);
+            trackingData.referrer_domain = referrerUrl.hostname;
+          } catch (e) {}
+        }
+        
+        // Add page information
+        trackingData.page_url = window.location.href;
+        trackingData.page_path = window.location.pathname;
+        trackingData.page_title = document.title;
+        
+        // Add hash parameters if present
+        if (window.location.hash) {
+          trackingData.page_hash = window.location.hash;
+          
+          // Parse hash parameters (format: #param1=value1&param2=value2)
+          if (window.location.hash.includes('=')) {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            for (const [key, value] of hashParams.entries()) {
+              trackingData['hash_' + key] = value;
+            }
+          }
+        }
+        
+        return trackingData;
+      }
+
+      // Enhanced analytics tracking with all URL parameters
+      function trackEvent(eventName, properties) {
+        const trackingParams = getTrackingParameters();
+        const fullProperties = {
+          ...trackingParams,
+          timestamp: new Date().toISOString(),
+          ...properties
+        };
+        
+        console.log('📊 Event tracked:', eventName, fullProperties);
+        
+        // Try Mixpanel if available
+        if (typeof window.mixpanel !== 'undefined' && window.mixpanel.track) {
+          try {
+            window.mixpanel.track(eventName, fullProperties);
+          } catch (error) {
+            console.log('Mixpanel tracking failed, using console only');
+          }
+        }
+        
+        // Store in localStorage for debugging
+        const events = JSON.parse(localStorage.getItem('ab_test_events') || '[]');
+        events.push({ eventName, properties: fullProperties, timestamp: new Date().toISOString() });
+        localStorage.setItem('ab_test_events', JSON.stringify(events.slice(-100)));
+      }
+
+      // URL utility functions for martideals redirect processing
+      function encodeUrlToBase64(url) {
+        return btoa(url);
+      }
+      
+      function extractAdIdFromUrl(currentUrl) {
+        try {
+          const url = new URL(currentUrl);
+          return url.searchParams.get('ad_id');
+        } catch (error) {
+          console.warn('Failed to parse URL for ad_id extraction:', currentUrl);
+          return null;
+        }
+      }
+      
+      function createRedirectUrl(originalUrl, adId) {
+        const redirectId = adId || 'default';
+        const encodedUrl = encodeUrlToBase64(originalUrl);
+        return 'https://tracking.martideals.com/partners/url-deep-redirect?url=' + encodedUrl + '&redirectId=' + redirectId;
+      }
+
+      // Template rendering function
+      function renderTemplate(templateHtml, data) {
+        let rendered = templateHtml;
+        
+        // Replace all placeholders with actual data
+        Object.keys(data).forEach(key => {
+          const placeholder = new RegExp('{{' + key + '}}', 'g');
+          let value = data[key] || '';
+          
+          // Process CTA URLs through martideals redirect system
+          if (key.toLowerCase() === 'ctaurl' && value) {
+            const adId = extractAdIdFromUrl(window.location.href);
+            value = createRedirectUrl(value, adId);
+          }
+          
+          rendered = rendered.replace(placeholder, value);
+        });
+        
+        return rendered;
+      }
+
+      // Random variant assignment
+      function assignVariant(variants) {
+        const randomValue = Math.random() * 100;
+        console.log('🎲 Random value generated:', randomValue.toFixed(2));
+        
+        let cumulative = 0;
+        for (const variant of variants) {
+          cumulative += variant.trafficPercent;
+          if (randomValue < cumulative) {
+            console.log('🎯 Randomly assigned variant:', variant.name, 'Random:', randomValue.toFixed(2));
+            return variant;
+          }
+        }
+        
+        // Fallback to first variant
+        console.log('🔄 Fallback to first variant');
+        return variants[0];
+      }
+
+          // Load and apply AB test variants
+          async function initializeABTesting() {
+            try {
+              console.log('🚀 Initializing AB Testing (100% serverless)...');
+
+              // Load AB test data from CDN (100% serverless) with better cache busting
+              const cdnUrl = 'https://daily.get.martideals.com/' + window.abTestData.articleSlug + '/ab-tests.json?v=' + Date.now();
+              console.log('📂 Loading A/B test from CDN:', cdnUrl);
+
+              const response = await fetch(cdnUrl);
+              if (response.ok) {
+                const data = await response.json();
+                console.log('📊 A/B test data loaded from CDN:', data);
+
+                if (data.tests && data.tests.length > 0) {
+                  const test = data.tests[0];
+                  window.abTestData.currentTest = test;
+                  console.log('🧪 Active test found:', test.name);
+                  console.log('🔍 Test variants:', test.variants.length);
+
+                  // Filter active variants
+                  const activeVariants = test.variants.filter(v => v.trafficPercent > 0);
+                  console.log('✅ Active variants:', activeVariants.length);
+
+                  if (activeVariants.length > 0) {
+                    // Assign variant
+                    const variant = assignVariant(activeVariants);
+                    window.abTestData.currentVariant = variant;
+
+                    console.log('🎯 Final assigned variant:', variant.name, variant.isControl ? '(Control)' : '(Test Variant)');
+                    console.log('📦 Variant has template:', !!variant.template);
+                    console.log('📦 Variant has data:', !!variant.data && Object.keys(variant.data).length > 0);
+
+                    // Apply variant content when DOM is ready
+                    function applyVariantWhenReady() {
+                      if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', () => {
+                          setTimeout(applyVariantContent, 50);
+                        });
+                      } else {
+                        setTimeout(applyVariantContent, 50);
+                      }
+                    }
+                    
+                    applyVariantWhenReady();
+
+                    // Track variant view
+                    trackEvent('Variant Viewed', {
+                      test_id: test.id,
+                      test_name: test.name,
+                      variant_id: variant.id,
+                      variant_name: variant.name,
+                      article_id: window.abTestData.articleId,
+                      article_slug: window.abTestData.articleSlug,
+                      is_control: variant.isControl,
+                      traffic_percent: variant.trafficPercent,
+                      template_id: variant.template ? variant.template.id : null,
+                      timestamp: new Date().toISOString()
+                    });
+                  } else {
+                    console.log('📝 No active variants found in test');
+                  }
+                } else {
+                  console.log('📝 No tests found in CDN data');
+                }
+              } else {
+                console.log('📝 No A/B test file found on CDN (HTTP', response.status, ') - this is normal if no AB tests are active');
+              }
+
+              window.abTestData.isReady = true;
+              console.log('✅ A/B testing initialization complete!');
+              
+              // Show content after A/B testing is complete
+              showArticleContent();
+              
+              // Ensure content is properly centered
+              ensureContentCentering();
+
+            } catch (error) {
+              console.log('❌ A/B test error:', error.message);
+              window.abTestData.isReady = true;
+              
+              // Show content even if A/B testing fails
+              showArticleContent();
+              
+              // Ensure content is properly centered
+              ensureContentCentering();
+            }
+          }
+
+          // Apply variant content to the page
+          function applyVariantContent() {
+            const variant = window.abTestData.currentVariant;
+            if (!variant) {
+              console.log('📝 No variant selected - using original content');
+              return;
+            }
+
+            console.log('🎨 Applying variant content:', variant.name, variant.isControl ? '(Control)' : '(Test)');
+            console.log('📦 Variant data:', JSON.stringify(variant, null, 2));
+
+            // Try multiple selectors to find the article container
+            let mainContent = document.querySelector('main .article-container') ||
+                              document.querySelector('.main-content .article-container') ||
+                              document.querySelector('main article') ||
+                              document.querySelector('.article-container') ||
+                              document.querySelector('article');
+            
+            if (!mainContent) {
+              console.warn('⚠️ Could not find article container element. Tried: main .article-container, .main-content .article-container, main article, .article-container, article');
+              // Try again after a short delay in case DOM isn't fully ready
+              setTimeout(() => {
+                mainContent = document.querySelector('main .article-container') ||
+                              document.querySelector('.main-content .article-container') ||
+                              document.querySelector('main article') ||
+                              document.querySelector('.article-container') ||
+                              document.querySelector('article');
+                if (mainContent && variant) {
+                  console.log('✅ Found article container on retry');
+                  applyVariantToElement(mainContent, variant);
+                } else {
+                  console.error('❌ Still could not find article container after retry');
+                }
+              }, 100);
+              return;
+            }
+            
+            applyVariantToElement(mainContent, variant);
+          }
+          
+          // Helper function to apply variant to element
+          function applyVariantToElement(element, variant) {
+            if (!element || !variant) return;
+
+            console.log('🎨 Applying variant to element:', variant.name, variant.isControl ? '(Control)' : '(Test)');
+            console.log('📦 Variant changes:', JSON.stringify(variant.changes, null, 2));
+
+            // NEW: Template-based content replacement (applies to ALL variants, including control)
+            if (variant.template && variant.template.htmlContent && variant.data) {
+              console.log('✅ Using template:', variant.template.name);
+              const renderedContent = renderTemplate(variant.template.htmlContent, variant.data);
+              element.innerHTML = renderedContent;
+              console.log('✅ Replaced main content with template:', variant.template.name);
+              return; // Template takes precedence
+            }
+
+            // If variant has data but no template, try to render basic content from data
+            if (variant.data && Object.keys(variant.data).length > 0) {
+              let htmlContent = '';
+              
+              // Build HTML from variant data
+              if (variant.data.title) {
+                htmlContent += '<h1>' + escapeHtml(variant.data.title) + '</h1>';
+              }
+              
+              if (variant.data.image || variant.data.featuredImage) {
+                const imageUrl = variant.data.image || variant.data.featuredImage;
+                htmlContent += '<div class="featured-image"><img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(variant.data.title || '') + '" /></div>';
+              }
+              
+              if (variant.data.description) {
+                htmlContent += '<p class="description">' + escapeHtml(variant.data.description) + '</p>';
+              }
+              
+              if (variant.data.cta || variant.data.ctaText) {
+                const ctaText = variant.data.cta || variant.data.ctaText;
+                let ctaUrl = variant.data.ctaUrl || variant.data.url || '#';
+                
+                // Process CTA URL through martideals redirect system
+                if (ctaUrl && ctaUrl !== '#') {
+                  const adId = extractAdIdFromUrl(window.location.href);
+                  ctaUrl = createRedirectUrl(ctaUrl, adId);
+                }
+                
+                htmlContent += '<a href="' + escapeHtml(ctaUrl) + '" class="btn btn-primary">' + escapeHtml(ctaText) + '</a>';
+              }
+              
+              if (htmlContent) {
+                element.innerHTML = htmlContent;
+                console.log('✅ Replaced main content with data-based HTML');
+                return;
+              }
+            }
+
+            // NEW: Handle simple changes (like title changes from simple A/B tests)
+            if (variant.changes && Object.keys(variant.changes).length > 0) {
+              console.log('🔧 Applying simple changes:', variant.changes);
+              
+              // Apply title changes
+              if (variant.changes.title) {
+                const h1 = element.querySelector('h1') || document.querySelector('h1');
+                if (h1) {
+                  h1.textContent = variant.changes.title;
+                  console.log('✅ Updated H1 title to:', variant.changes.title);
+                }
+                // Also update document title
+                document.title = variant.changes.title;
+                console.log('✅ Updated document title to:', variant.changes.title);
+              }
+
+              // Apply meta title
+              if (variant.changes.metaTitle) {
+                document.title = variant.changes.metaTitle;
+                const ogTitle = document.querySelector('meta[property="og:title"]');
+                if (ogTitle) ogTitle.setAttribute('content', variant.changes.metaTitle);
+                console.log('✅ Updated meta title to:', variant.changes.metaTitle);
+              }
+
+              // Apply meta description
+              if (variant.changes.metaDescription) {
+                const metaDesc = document.querySelector('meta[name="description"]');
+                if (metaDesc) metaDesc.setAttribute('content', variant.changes.metaDescription);
+                const ogDesc = document.querySelector('meta[property="og:description"]');
+                if (ogDesc) ogDesc.setAttribute('content', variant.changes.metaDescription);
+                console.log('✅ Updated meta description');
+              }
+
+              // Apply featured image
+              if (variant.changes.featuredImage) {
+                const featuredImgs = element.querySelectorAll('.featured-image img, .hero-image img') || 
+                                   document.querySelectorAll('.featured-image img, .hero-image img');
+                featuredImgs.forEach(img => {
+                  img.src = variant.changes.featuredImage;
+                  console.log('✅ Updated featured image');
+                });
+              }
+
+              // Apply CTA changes
+              if (variant.changes.ctaText || variant.changes.ctaColor || variant.changes.ctaPosition) {
+                const ctaButtons = element.querySelectorAll('.cta-button, .btn-primary, .buy-button') ||
+                                 document.querySelectorAll('.cta-button, .btn-primary, .buy-button');
+                ctaButtons.forEach(btn => {
+                  if (variant.changes.ctaText) {
+                    btn.textContent = variant.changes.ctaText;
+                    console.log('✅ Updated CTA text to:', variant.changes.ctaText);
+                  }
+                  if (variant.changes.ctaColor) {
+                    btn.style.backgroundColor = variant.changes.ctaColor;
+                    btn.style.borderColor = variant.changes.ctaColor;
+                    console.log('✅ Updated CTA color to:', variant.changes.ctaColor);
+                  }
+                });
+              }
+
+              // Apply custom CSS
+              if (variant.changes.customCSS) {
+                const style = document.createElement('style');
+                style.textContent = variant.changes.customCSS;
+                document.head.appendChild(style);
+                console.log('✅ Applied custom CSS');
+              }
+
+              // Apply custom HTML
+              if (variant.changes.customHTML) {
+                const customDiv = document.createElement('div');
+                customDiv.className = 'ab-test-custom-content';
+                customDiv.innerHTML = variant.changes.customHTML;
+                element.appendChild(customDiv);
+                console.log('✅ Added custom HTML');
+              }
+
+              console.log('✅ Successfully applied variant changes');
+              return;
+            }
+
+            // If control variant without template, data, or changes, keep original content
+            if (variant.isControl && !variant.template && (!variant.data || Object.keys(variant.data).length === 0) && (!variant.changes || Object.keys(variant.changes).length === 0)) {
+              console.log('📝 Control variant without template/data/changes - keeping original content');
+              return;
+            }
+            
+            console.warn('⚠️ Variant has no template, data, or changes to display. Variant:', JSON.stringify(variant, null, 2));
+          }
+          
+          // Helper function to escape HTML
+          function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+          }
+
+          // Show article content with smooth transition
+          function showArticleContent() {
+            const articleContainer = document.querySelector('.article-container');
+            if (articleContainer) {
+              articleContainer.classList.add('ab-ready');
+              console.log('✅ Article content revealed');
+            }
+          }
+
+          // Ensure content is properly centered
+          function ensureContentCentering() {
+            const articleContainer = document.querySelector('.article-container');
+            if (articleContainer) {
+              // Force center alignment on all content
+              articleContainer.style.textAlign = 'center';
+              articleContainer.style.margin = '0 auto';
+              articleContainer.style.maxWidth = '800px';
+              
+              // Center all child elements
+              const allElements = articleContainer.querySelectorAll('*');
+              allElements.forEach(el => {
+                if (el.tagName !== 'IMG') { // Don't center images as they have their own styling
+                  el.style.textAlign = 'center';
+                }
+              });
+              
+              console.log('✅ Content centering applied');
+            }
+          }
+
+      // Expose tracking function globally with full parameter tracking
+      window.abTestTrackConversion = function(conversionType, eventData) {
+        if (!window.abTestData.currentTest || !window.abTestData.currentVariant) return;
+        
+        trackEvent('Conversion', {
+          test_id: window.abTestData.currentTest.id,
+          test_name: window.abTestData.currentTest.name,
+          variant_id: window.abTestData.currentVariant.id,
+          variant_name: window.abTestData.currentVariant.name,
+          conversion_type: conversionType || 'default',
+          article_id: window.abTestData.articleId,
+          article_slug: window.abTestData.articleSlug,
+          is_control: window.abTestData.currentVariant.isControl,
+          traffic_percent: window.abTestData.currentVariant.trafficPercent,
+          ...eventData
+        });
+        
+        console.log('🎯 Conversion tracked:', conversionType);
+      };
+
+      // Start AB testing
+      initializeABTesting();
+      
+      // Fallback: show content after 2 seconds if A/B testing is taking too long
+      setTimeout(function() {
+        if (!window.abTestData.isReady) {
+          console.log('⏰ A/B testing timeout - showing content anyway');
+          const articleContainer = document.querySelector('.article-container');
+          if (articleContainer && !articleContainer.classList.contains('ab-ready')) {
+            articleContainer.classList.add('ab-fallback');
+            ensureContentCentering();
+          }
+        }
+      }, 2000);
+    </script>
+    ` : ''}
     
     <!-- Dynamic URL Processing Script -->
     <script>
@@ -160,6 +688,23 @@ export function generateHTML(article: ArticleData): string {
     
     <!-- CDN Stylesheet with Cache Busting -->
     <link rel="stylesheet" href="https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/assets/styles.css?v=${Date.now()}">
+    <!-- AB Testing Version Marker -->
+    <meta name="ab-testing-version" content="${Date.now()}">
+    
+    <!-- Hide content until A/B testing is complete -->
+    <style>
+      .article-container {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+      .article-container.ab-ready {
+        opacity: 1;
+      }
+      /* Fallback: show content after 2 seconds if A/B testing fails */
+      .article-container.ab-fallback {
+        opacity: 1;
+      }
+    </style>
 </head>
 <body>
     <!-- Dynamic Header - Loaded from CDN -->
@@ -268,9 +813,11 @@ export function generateHTML(article: ArticleData): string {
     </script>
 
     <main class="main-content">
-        <article class="article-container">
-            ${renderArticleContent(content, article)}
-        </article>
+        <div class="container">
+            <article class="article-container">
+                ${renderArticleContent(content, article)}
+            </article>
+        </div>
     </main>
 
     <!-- Dynamic Footer - Loaded from CDN -->
@@ -354,6 +901,37 @@ export function generateHTML(article: ArticleData): string {
       loadDynamicFooter();
     </script>
     
+    <!-- Analytics Loading (Footer) -->
+    ${article.id ? `
+    <script>
+      // Load Mixpanel asynchronously (non-blocking)
+      (function() {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
+        script.async = true;
+        script.onload = function() {
+          console.log('📦 Mixpanel script loaded');
+          if (typeof window.mixpanel !== 'undefined' && window.mixpanel.init) {
+            try {
+              window.mixpanel.init('e474bceac7e0d60bc3c4cb27aaf1d4f7', {
+                debug: false,
+                track_pageview: false,
+                persistence: 'localStorage',
+              });
+              console.log('✅ Mixpanel initialized (footer)');
+            } catch (error) {
+              console.log('❌ Mixpanel initialization failed:', error);
+            }
+          }
+        };
+        script.onerror = function() {
+          console.log('❌ Failed to load Mixpanel script - continuing without it');
+        };
+        document.head.appendChild(script);
+      })();
+    </script>
+    ` : ''}
+    
     <!-- CCPA Cookie Consent Banner -->
     <div id="cookie-banner" class="cookie-banner" style="display: none;">
         <div class="cookie-banner-content">
@@ -363,12 +941,12 @@ export function generateHTML(article: ArticleData): string {
                     We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
                     By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.
                     <br><br>
-                    California residents have additional <a href="https://www.martideals.com/ccpa-privacy-rights" class="privacy-link">CCPA privacy rights</a>.
+                    California residents have additional <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">CCPA privacy rights</a>.
                 </p>
             </div>
             <div class="cookie-actions">
-                <button onclick="acceptCookies()" class="btn-primary btn-sm">Accept All</button>
-                <button onclick="rejectCookies()" class="btn-outlined btn-sm">Reject All</button>
+                <button onclick="acceptCookies()" class="btn btn-primary btn-small">Accept All</button>
+                <button onclick="rejectCookies()" class="btn btn-outlined btn-small">Reject All</button>
             </div>
         </div>
     </div>
@@ -414,12 +992,19 @@ export function generateHTML(article: ArticleData): string {
 }
 
 function renderArticleContent(content: any, article: ArticleData): string {
+  if (!content) {
+    return `<h1>${article.title}</h1><p>Content will be loaded from variants...</p>`
+  }
+  
   const { contentType } = content
   
   if (contentType === 'single_product') {
     return renderSingleProduct(content, article)
   } else if (contentType === 'multiple_products') {
     return renderMultipleProducts(content, article)
+  } else if (contentType === 'template_based') {
+    // Template-based content - show title only, content will be loaded by variants
+    return `<h1>${article.title}</h1>`
   } else {
     return renderBlogArticle(content, article)
   }
@@ -432,8 +1017,8 @@ function renderSingleProduct(content: any, article: ArticleData): string {
     <div class="single-product-layout">
       ${article.featuredImage ? `
       <div class="featured-image">
-        ${article.canonicalUrl ? `
-        <a href="${article.canonicalUrl}" style="cursor: pointer;">
+        ${product?.productLink ? `
+        <a href="${processCTAUrl(product.productLink)}" target="_blank" rel="noopener noreferrer" style="cursor: pointer;">
           <img src="${article.featuredImage}" alt="${article.title}" style="cursor: pointer;" />
         </a>
         ` : `
@@ -442,31 +1027,34 @@ function renderSingleProduct(content: any, article: ArticleData): string {
       </div>
       ` : ''}
       
-      ${article.canonicalUrl ? `
+      ${product?.productLink ? `
       <h1 class="article-title">
-        <a href="${article.canonicalUrl}" style="text-decoration: none; color: inherit; cursor: pointer;">${article.title}</a>
+        <a href="${processCTAUrl(product.productLink)}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer;">${article.title}</a>
       </h1>
       ` : `
       <h1 class="article-title">${article.title}</h1>
       `}
       
-      <div class="article-meta">
-        <span class="author">By ${article.author}</span>
-        ${article.publishedAt ? `<span class="date">${new Date(article.publishedAt).toLocaleDateString()}</span>` : ''}
+      ${product?.productLink ? `
+      <div class="article-content" style="cursor: pointer;" onclick="window.open('${processCTAUrl(product.productLink)}', '_blank')">
+        ${product?.description || ''}
       </div>
-      
+      ` : `
       <div class="article-content">
         ${product?.description || ''}
       </div>
+      `}
       
       ${product?.productLink ? `
-      <div class="product-cta" style="cursor: pointer;" onclick="window.open('${processCTAUrl(product.productLink)}', '_blank')">
+      <div class="product-cta-container" style="cursor: pointer;" onclick="window.open('${processCTAUrl(product.productLink)}', '_blank')">
         <div class="urgency-banner">
           <span class="urgency-text">🔥 LIMITED TIME OFFER - ACT NOW!</span>
         </div>
-        <a href="${processCTAUrl(product.productLink)}" class="btn-primary cta-pulse" target="_blank" rel="noopener noreferrer">
-          ${product.ctaText || '🛒 GET THIS DEAL NOW'} →
-        </a>
+        <div class="cta-button-wrapper">
+          <a href="${processCTAUrl(product.productLink)}" class="btn-primary cta-pulse" target="_blank" rel="noopener noreferrer">
+            ${product.ctaText || '🛒 GET THIS DEAL NOW'} →
+          </a>
+        </div>
         <div class="cta-subtext">
           ⚡ Don't miss out - prices may increase at any time!
         </div>
@@ -485,13 +1073,14 @@ function renderSingleProduct(content: any, article: ArticleData): string {
 
 function renderMultipleProducts(content: any, article: ArticleData): string {
   const { products } = content
+  const firstProductLink = products && products[0]?.productLink
   
   return `
     <div class="multiple-products-layout">
       ${article.featuredImage ? `
       <div class="featured-image">
-        ${article.canonicalUrl ? `
-        <a href="${article.canonicalUrl}" style="cursor: pointer;">
+        ${firstProductLink ? `
+        <a href="${processCTAUrl(firstProductLink)}" target="_blank" rel="noopener noreferrer" style="cursor: pointer;">
           <img src="${article.featuredImage}" alt="${article.title}" style="cursor: pointer;" />
         </a>
         ` : `
@@ -500,22 +1089,23 @@ function renderMultipleProducts(content: any, article: ArticleData): string {
       </div>
       ` : ''}
       
-      ${article.canonicalUrl ? `
+      ${firstProductLink ? `
       <h1 class="article-title">
-        <a href="${article.canonicalUrl}" style="text-decoration: none; color: inherit; cursor: pointer;">${article.title}</a>
+        <a href="${processCTAUrl(firstProductLink)}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer;">${article.title}</a>
       </h1>
       ` : `
       <h1 class="article-title">${article.title}</h1>
       `}
       
-      <div class="article-meta">
-        <span class="author">By ${article.author}</span>
-        ${article.publishedAt ? `<span class="date">${new Date(article.publishedAt).toLocaleDateString()}</span>` : ''}
+      ${firstProductLink ? `
+      <div class="article-intro" style="cursor: pointer;" onclick="window.open('${processCTAUrl(firstProductLink)}', '_blank')">
+        ${content.intro || ''}
       </div>
-      
+      ` : `
       <div class="article-intro">
         ${content.intro || ''}
       </div>
+      `}
       
       <div class="products-grid">
         ${(products || []).map((product: any, index: number) => `
@@ -586,14 +1176,15 @@ function renderBlogArticle(content: any, article: ArticleData): string {
       <h1 class="article-title">${article.title}</h1>
       `}
       
-      <div class="article-meta">
-        <span class="author">By ${article.author}</span>
-        ${article.publishedAt ? `<span class="date">${new Date(article.publishedAt).toLocaleDateString()}</span>` : ''}
+      ${article.canonicalUrl ? `
+      <div class="article-body" style="cursor: pointer;" onclick="window.open('${article.canonicalUrl}', '_blank')">
+        ${content.body || ''}
       </div>
-      
+      ` : `
       <div class="article-body">
         ${content.body || ''}
       </div>
+      `}
     </div>
   `
 }
@@ -724,10 +1315,8 @@ function getInlineStyles(): string {
     .article-container {
       max-width: 800px;
       margin: 0 auto;
-      background: #fff;
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 40px 20px;
+      text-align: center;
     }
     
     .featured-image {
@@ -735,6 +1324,7 @@ function getInlineStyles(): string {
       margin-bottom: 32px;
       border-radius: 8px;
       overflow: hidden;
+      text-align: center;
     }
     
     .featured-image img {
@@ -751,9 +1341,10 @@ function getInlineStyles(): string {
     .article-title {
       font-size: 36px;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 32px;
       color: #1d1d1f;
       line-height: 1.2;
+      text-align: center;
     }
     
     .article-title a:hover {
@@ -776,22 +1367,79 @@ function getInlineStyles(): string {
       line-height: 1.8;
       color: #1d1d1f;
       margin-bottom: 32px;
+      text-align: center;
+    }
+    
+    .article-content[onclick],
+    .article-intro[onclick],
+    .article-body[onclick] {
+      transition: opacity 0.2s ease;
+    }
+    
+    .article-content[onclick]:hover,
+    .article-intro[onclick]:hover,
+    .article-body[onclick]:hover {
+      opacity: 0.8;
     }
     
     .article-content p,
     .article-body p {
       margin-bottom: 16px;
-    }
-    
-    .product-cta {
       text-align: center;
-      margin: 32px 0;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     
-    .product-cta:hover {
+    .article-content *,
+    .article-intro *,
+    .article-body * {
+      text-align: center;
+    }
+    
+    .single-product-layout,
+    .multiple-products-layout,
+    .blog-article-layout {
+      text-align: center;
+    }
+    
+    .product-cta-container {
+      text-align: center;
+      margin: 32px auto;
+      max-width: 600px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding: 24px;
+      border-radius: 12px;
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+    }
+    
+    .product-cta-container:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      border-color: #0071e3;
+    }
+    
+    .urgency-banner {
+      margin-bottom: 16px;
+    }
+    
+    .urgency-text {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-block;
+    }
+    
+    .cta-button-wrapper {
+      margin: 20px 0;
+    }
+    
+    .cta-subtext {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #6e6e73;
+      font-weight: 500;
     }
     
     .btn-primary,
@@ -826,9 +1474,26 @@ function getInlineStyles(): string {
       background: #e8e8ed;
     }
     
+    .cta-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(0, 113, 227, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 113, 227, 0);
+      }
+    }
+    
     .product-rating {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       margin: 16px 0;
       font-size: 14px;
@@ -843,6 +1508,7 @@ function getInlineStyles(): string {
       display: grid;
       gap: 24px;
       margin-top: 32px;
+      text-align: center;
     }
     
     .product-card {
@@ -850,6 +1516,7 @@ function getInlineStyles(): string {
       border-radius: 12px;
       overflow: hidden;
       transition: transform 0.2s, box-shadow 0.2s;
+      text-align: center;
     }
     
     .product-card:hover {
@@ -872,6 +1539,7 @@ function getInlineStyles(): string {
     
     .product-info {
       padding: 24px;
+      text-align: center;
     }
     
     .product-title {
@@ -879,6 +1547,7 @@ function getInlineStyles(): string {
       font-weight: 600;
       margin-bottom: 12px;
       color: #1d1d1f;
+      text-align: center;
     }
     
     .product-title a:hover {
@@ -891,6 +1560,7 @@ function getInlineStyles(): string {
       line-height: 1.6;
       color: #6e6e73;
       margin-bottom: 16px;
+      text-align: center;
     }
     
     .site-footer {
@@ -1131,8 +1801,7 @@ function getInlineStyles(): string {
       }
       
       .article-container {
-        padding: 24px;
-        border-radius: 0;
+        padding: 24px 16px;
       }
       
       .article-title {

@@ -81,26 +81,26 @@ export default function CookieConsent() {
               <strong> By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong>
               <br /><br />
               You can choose which cookies to accept. For California residents, this also relates to your 
-              <Link href="/assets/ccpa-privacy-rights.html" className="privacy-link"> CCPA privacy rights</Link>.
+              <Link href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" className="privacy-link"> CCPA privacy rights</Link>.
             </p>
           </div>
           
           <div className="cookie-actions">
             <button 
               onClick={() => setShowPreferences(true)}
-              className="btn btn-outlined btn-sm"
+              className="btn btn-outlined btn-small"
             >
               Customize
             </button>
             <button 
               onClick={handleRejectAll}
-              className="btn btn-outlined btn-sm"
+              className="btn btn-outlined btn-small"
             >
               Reject All
             </button>
             <button 
               onClick={handleAcceptAll}
-              className="btn btn-primary btn-sm"
+              className="btn btn-primary btn-small"
             >
               Accept All
             </button>

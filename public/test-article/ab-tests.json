@@ -1,0 +1,28 @@
+{
+  "articleSlug": "test-article",
+  "timestamp": "2025-11-02T08:21:53.018Z",
+  "tests": [
+    {
+      "id": "test_1762071713018",
+      "name": "Headline Test",
+      "variants": [
+        {
+          "id": "variant_0",
+          "name": "Control (Original)",
+          "isControl": true,
+          "trafficPercent": 50,
+          "changes": {}
+        },
+        {
+          "id": "variant_1",
+          "name": "New Headline",
+          "isControl": false,
+          "trafficPercent": 50,
+          "changes": {
+            "title": "Test Headline"
+          }
+        }
+      ]
+    }
+  ]
+}

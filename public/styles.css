@@ -141,10 +141,21 @@ body {
 .article-container {
   max-width: 800px;
   margin: 0 auto;
-  background: #fff;
+  background: #f5f5f7;
   border-radius: 12px;
   padding: 40px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.page-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  text-align: center;
 }
 
 .featured-image {
@@ -730,7 +741,18 @@ body {
   
   .article-container {
     padding: 24px;
-    border-radius: 0;
+    border-radius: 12px;
+    background: #f5f5f7;
+    margin: 0 16px;
+    max-width: calc(100% - 32px);
+  }
+
+  .page-container {
+    padding: 24px;
+    border-radius: 12px;
+    background: #f5f5f7;
+    margin: 0 16px;
+    max-width: calc(100% - 32px);
   }
   
   .article-title {

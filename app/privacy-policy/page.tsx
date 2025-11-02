@@ -1,12 +1,10 @@
-export const metadata = {
-  title: 'Privacy Policy - MartiDeals',
-  description: 'Learn how MartiDeals collects, uses, and protects your personal information.',
-}
+'use client'
 
 export default function PrivacyPolicy() {
   return (
-    <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '0 var(--spacing-4)' }}>
-      <div className="privacy-page">
+    <div className="main-content">
+      <div className="page-container">
+        <div className="privacy-page">
         <header className="page-header">
           <h1>Privacy Policy</h1>
           <p className="last-updated">Last Updated: October 27, 2025</p>
@@ -237,6 +235,7 @@ export default function PrivacyPolicy() {
           </section>
         </div>
       </div>
+    </div>
 
       <style jsx>{`
         .privacy-page {
