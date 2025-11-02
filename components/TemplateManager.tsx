@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Template {
   id: string
@@ -33,6 +33,19 @@ export default function TemplateManager({ onTemplateSelect, selectedTemplateId }
     loadTemplates()
   }, [])
 
+  // Check for template to edit after page refresh
+  useEffect(() => {
+    const editTemplateId = sessionStorage.getItem('editTemplateId')
+    if (editTemplateId && templates.length > 0) {
+      const templateToEdit = templates.find(t => t.id === editTemplateId)
+      if (templateToEdit) {
+        setEditingTemplate(templateToEdit)
+        setShowCreateModal(true)
+        sessionStorage.removeItem('editTemplateId')
+      }
+    }
+  }, [templates])
+
   const loadTemplates = async () => {
     try {
       const response = await fetch('/api/templates')
@@ -59,8 +72,12 @@ export default function TemplateManager({ onTemplateSelect, selectedTemplateId }
   }
 
   const handleEditTemplate = (template: Template) => {
-    setEditingTemplate(template)
-    setShowCreateModal(true)
+    // Refresh the page when starting to edit
+    if (window.confirm('This will refresh the page to ensure you have the latest template data. Continue?')) {
+      // Store the template ID to edit after refresh
+      sessionStorage.setItem('editTemplateId', template.id)
+      window.location.reload()
+    }
   }
 
   const handlePreviewTemplate = (template: Template) => {
@@ -379,6 +396,9 @@ function TemplateCreateModal({ template, onClose }: TemplateCreateModalProps) {
     placeholders: template?.placeholders?.join(', ') || ''
   })
   const [saving, setSaving] = useState(false)
+  const [autoSaving, setAutoSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -418,15 +438,85 @@ function TemplateCreateModal({ template, onClose }: TemplateCreateModalProps) {
     }
   }
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  // Auto-save function
+  const autoSave = async (data: typeof formData) => {
+    if (!template) return // Only auto-save for existing templates
+    
+    setAutoSaving(true)
+    try {
+      const placeholdersArray = data.placeholders
+        .split(',')
+        .map(p => p.trim())
+        .filter(p => p.length > 0)
+
+      const payload = {
+        ...data,
+        placeholders: placeholdersArray
+      }
+
+      const response = await fetch(`/api/templates/${template.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (response.ok) {
+        setLastSaved(new Date())
+        console.log('Template auto-saved successfully')
+      } else {
+        console.error('Auto-save failed')
+      }
+    } catch (error) {
+      console.error('Auto-save error:', error)
+    } finally {
+      setAutoSaving(false)
+    }
   }
+
+  const handleChange = (field: string, value: string) => {
+    const newFormData = { ...formData, [field]: value }
+    setFormData(newFormData)
+    
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+    
+    // Set new timeout for auto-save (debounce for 2 seconds)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave(newFormData)
+    }, 2000)
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>{template ? 'Edit Template' : 'Create New Template'}</h3>
+          <div className="modal-title-section">
+            <h3>{template ? 'Edit Template' : 'Create New Template'}</h3>
+            {template && (
+              <div className="auto-save-status">
+                {autoSaving && <span className="saving-indicator">💾 Saving...</span>}
+                {!autoSaving && lastSaved && (
+                  <span className="saved-indicator">
+                    ✅ Saved at {lastSaved.toLocaleTimeString()}
+                  </span>
+                )}
+                {template && !autoSaving && !lastSaved && (
+                  <span className="auto-save-info">🔄 Auto-save enabled</span>
+                )}
+              </div>
+            )}
+          </div>
           <button onClick={onClose} className="modal-close">×</button>
         </div>
 
@@ -529,13 +619,37 @@ function TemplateCreateModal({ template, onClose }: TemplateCreateModalProps) {
           .modal-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             padding: 20px;
             border-bottom: 1px solid #e9ecef;
           }
 
+          .modal-title-section {
+            flex: 1;
+          }
+
           .modal-header h3 {
-            margin: 0;
+            margin: 0 0 8px 0;
+          }
+
+          .auto-save-status {
+            font-size: 12px;
+            margin-top: 4px;
+          }
+
+          .saving-indicator {
+            color: #007bff;
+            font-weight: 500;
+          }
+
+          .saved-indicator {
+            color: #28a745;
+            font-weight: 500;
+          }
+
+          .auto-save-info {
+            color: #6c757d;
+            font-weight: 500;
           }
 
           .modal-close {

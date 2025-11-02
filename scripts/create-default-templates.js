@@ -14,7 +14,7 @@ const defaultTemplates = [
 <div class="urgent-sale-container">
   <div class="urgency-banner">
     <span class="urgency-text">🔥 {{urgencyText}}</span>
-    <span class="countdown">⏰ {{timeLeft}}</span>
+    <span class="countdown" id="countdown-timer">⏰ Loading...</span>
   </div>
   
   <div class="product-hero">
@@ -42,10 +42,13 @@ const defaultTemplates = [
   </div>
 </div>
 
+
 <style>
 .urgent-sale-container {
+  width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  padding: 0 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -58,6 +61,21 @@ const defaultTemplates = [
   margin-bottom: 20px;
   border-radius: 8px;
   animation: pulse 2s infinite;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.countdown {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1em;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 10px;
+  border-radius: 5px;
+  min-width: 100px;
+  text-align: center;
 }
 
 .product-hero {
@@ -150,7 +168,29 @@ const defaultTemplates = [
   50% { opacity: 0.8; }
 }
 
+/* Mobile-first responsive design - Full width on mobile */
 @media (max-width: 768px) {
+  .urgent-sale-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 16px;
+    margin: 0;
+  }
+  
+  .urgency-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .countdown {
+    min-width: auto;
+    width: 100%;
+    max-width: 200px;
+  }
+  
   .product-hero {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -158,6 +198,54 @@ const defaultTemplates = [
   
   .urgent-title {
     font-size: 2rem;
+    margin-bottom: 16px;
+  }
+  
+  .price-container {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .original-price {
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 5px;
+    margin-right: 0;
+  }
+  
+  .sale-price {
+    font-size: 2rem;
+  }
+  
+  .urgent-cta {
+    padding: 16px 32px;
+    font-size: 1.1rem;
+  }
+  
+  .discount-badge {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 16px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .urgent-sale-container {
+    padding: 0 12px;
+  }
+  
+  .urgent-title {
+    font-size: 1.8rem;
+  }
+  
+  .sale-price {
+    font-size: 1.8rem;
+  }
+  
+  .original-price {
+    font-size: 1.1rem;
   }
 }
 </style>`
@@ -199,6 +287,7 @@ const defaultTemplates = [
 
 <style>
 .minimal-container {
+  width: 100%;
   max-width: 600px;
   margin: 0 auto;
   padding: 40px 20px;
@@ -298,6 +387,50 @@ const defaultTemplates = [
   color: #28a745;
   font-weight: bold;
 }
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+  .minimal-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 16px;
+    margin: 0;
+  }
+  
+  .product-title {
+    font-size: 1.8rem;
+  }
+  
+  .product-description {
+    font-size: 1rem;
+    max-width: 100%;
+  }
+  
+  .price {
+    font-size: 1.8rem;
+  }
+  
+  .minimal-cta {
+    padding: 14px 32px;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .minimal-container {
+    padding: 16px 12px;
+  }
+  
+  .product-title {
+    font-size: 1.6rem;
+  }
+  
+  .price {
+    font-size: 1.6rem;
+  }
+}
 </style>`
   },
   
@@ -347,6 +480,7 @@ const defaultTemplates = [
 
 <style>
 .social-proof-container {
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
@@ -441,7 +575,15 @@ const defaultTemplates = [
   font-size: 0.9rem;
 }
 
+/* Mobile responsive design */
 @media (max-width: 768px) {
+  .social-proof-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+    margin: 0;
+  }
+  
   .main-content {
     grid-template-columns: 1fr;
     gap: 30px;
@@ -449,6 +591,37 @@ const defaultTemplates = [
   
   .hero-title {
     font-size: 2rem;
+  }
+  
+  .price {
+    font-size: 1.8rem;
+  }
+  
+  .social-cta {
+    padding: 14px 24px;
+    font-size: 1rem;
+  }
+  
+  .testimonial {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .social-proof-container {
+    padding: 12px;
+  }
+  
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  
+  .price {
+    font-size: 1.6rem;
+  }
+  
+  .social-stats {
+    padding: 8px 16px;
   }
 }
 </style>`

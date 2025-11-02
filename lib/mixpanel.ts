@@ -6,25 +6,37 @@ const MIXPANEL_TOKEN = 'e474bceac7e0d60bc3c4cb27aaf1d4f7'
 // Track initialization state
 let isInitialized = false
 
-// Initialize only on client side
-if (typeof window !== 'undefined') {
+// Check if analytics cookies are accepted
+function hasAnalyticsConsent(): boolean {
+  if (typeof window === 'undefined') return false
+  
   try {
-    mixpanel.init(MIXPANEL_TOKEN, {
-      debug: process.env.NODE_ENV === 'development',
-      track_pageview: false, // We'll track manually
-      persistence: 'localStorage',
-      ignore_dnt: false,
-    })
-    isInitialized = true
-    console.log('Mixpanel initialized successfully')
+    const consent = localStorage.getItem('cookie-consent')
+    if (!consent) return false
+    
+    const preferences = JSON.parse(consent)
+    return preferences.analytics === true
   } catch (error) {
-    console.error('Failed to initialize Mixpanel:', error)
+    console.error('Failed to check cookie consent:', error)
+    return false
   }
 }
 
-// Helper to ensure Mixpanel is initialized
+// Initialize only on client side and only if consent is given
+if (typeof window !== 'undefined') {
+  // Don't initialize immediately - wait for consent check
+  // Initialization will happen on first tracking call if consent is given
+}
+
+// Helper to ensure Mixpanel is initialized (only if consent is given)
 function ensureInitialized(): boolean {
   if (typeof window === 'undefined') return false
+  
+  // Check if analytics consent is given
+  if (!hasAnalyticsConsent()) {
+    console.log('Mixpanel: Analytics cookies not accepted, skipping initialization')
+    return false
+  }
   
   if (!isInitialized) {
     try {
@@ -243,4 +255,5 @@ export const analytics = {
 }
 
 export default analytics
+
 

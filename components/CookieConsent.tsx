@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import analytics from '@/lib/mixpanel'
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false)
@@ -22,7 +23,41 @@ export default function CookieConsent() {
       const savedPreferences = JSON.parse(consent)
       setPreferences(savedPreferences)
     }
+
+    // Expose function to open cookie preferences from anywhere
+    if (typeof window !== 'undefined') {
+      (window as any).openCookiePreferences = () => {
+        setShowPreferences(true)
+        // Also show banner if hidden
+        setShowBanner(true)
+      }
+    }
+
+    // Cleanup
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).openCookiePreferences
+      }
+    }
   }, [])
+
+  // Initialize analytics when consent is given
+  const initializeAnalyticsIfConsented = (prefs: typeof preferences) => {
+    if (prefs.analytics && typeof window !== 'undefined') {
+      // Trigger a page view to initialize Mixpanel if needed
+      // The MixpanelProvider will handle this, but we can also do it here
+      setTimeout(() => {
+        try {
+          analytics.trackPageView(window.location.pathname, {
+            path: window.location.pathname,
+            referrer: document.referrer,
+          })
+        } catch (error) {
+          console.error('Failed to initialize analytics:', error)
+        }
+      }, 100)
+    }
+  }
 
   const handleAcceptAll = () => {
     const allAccepted = {
@@ -36,6 +71,8 @@ export default function CookieConsent() {
     localStorage.setItem('cookie-consent-date', new Date().toISOString())
     setShowBanner(false)
     setShowPreferences(false)
+    // Initialize analytics since user accepted
+    initializeAnalyticsIfConsented(allAccepted)
   }
 
   const handleRejectAll = () => {
@@ -57,6 +94,8 @@ export default function CookieConsent() {
     localStorage.setItem('cookie-consent-date', new Date().toISOString())
     setShowBanner(false)
     setShowPreferences(false)
+    // Initialize analytics if user enabled it
+    initializeAnalyticsIfConsented(preferences)
   }
 
   const handlePreferenceChange = (type: keyof typeof preferences) => {
@@ -67,46 +106,60 @@ export default function CookieConsent() {
     }))
   }
 
-  if (!showBanner) return null
+  // Show preferences modal even if banner is hidden (when opened via footer link)
+  if (!showBanner && !showPreferences) return null
 
   return (
     <>
-      {/* Cookie Consent Banner */}
+      {/* Cookie Consent Banner - Minimal Design */}
+      {showBanner && (
       <div className="cookie-banner">
         <div className="cookie-banner-content">
           <div className="cookie-info">
-            <h3>🍪 We Value Your Privacy</h3>
             <p>
-              We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
-              <strong> By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong>
-              <br /><br />
-              You can choose which cookies to accept. For California residents, this also relates to your 
-              <Link href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" className="privacy-link"> CCPA privacy rights</Link>.
+              We use cookies to enhance your experience. 
+              <Link href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" className="privacy-link"> Learn more</Link>
             </p>
           </div>
           
           <div className="cookie-actions">
             <button 
-              onClick={() => setShowPreferences(true)}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRejectAll();
+              }}
               className="btn btn-outlined btn-small"
             >
-              Customize
+              Reject
             </button>
             <button 
-              onClick={handleRejectAll}
-              className="btn btn-outlined btn-small"
-            >
-              Reject All
-            </button>
-            <button 
-              onClick={handleAcceptAll}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAcceptAll();
+              }}
               className="btn btn-primary btn-small"
             >
-              Accept All
+              Accept
+            </button>
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowPreferences(true);
+              }}
+              className="btn-link btn-small"
+            >
+              Customize
             </button>
           </div>
         </div>
       </div>
+      )}
 
       {/* Cookie Preferences Modal */}
       {showPreferences && (
@@ -115,7 +168,12 @@ export default function CookieConsent() {
             <div className="cookie-modal-header">
               <h2>Cookie Preferences</h2>
               <button 
-                onClick={() => setShowPreferences(false)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowPreferences(false);
+                }}
                 className="close-button"
                 aria-label="Close"
               >
@@ -194,13 +252,23 @@ export default function CookieConsent() {
             
             <div className="cookie-modal-footer">
               <button 
-                onClick={handleRejectAll}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleRejectAll();
+                }}
                 className="btn btn-outlined"
               >
                 Reject All
               </button>
               <button 
-                onClick={handleSavePreferences}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSavePreferences();
+                }}
                 className="btn btn-primary"
               >
                 Save Preferences
@@ -218,44 +286,65 @@ export default function CookieConsent() {
           right: 0;
           background: var(--color-systemBackground);
           border-top: 1px solid var(--color-separator);
-          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
           z-index: 10000;
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
         }
 
         .cookie-banner-content {
-          max-width: 1400px;
+          max-width: 1200px;
           margin: 0 auto;
-          padding: var(--spacing-4);
+          padding: var(--spacing-3) var(--spacing-4);
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: var(--spacing-4);
         }
 
-        .cookie-info h3 {
-          margin: 0 0 var(--spacing-2) 0;
-          font-size: var(--font-size-lg);
-          font-weight: 600;
-          color: var(--color-label);
+        .cookie-info {
+          flex: 1;
         }
 
         .cookie-info p {
           margin: 0;
+          font-size: var(--font-size-sm);
           color: var(--color-secondaryLabel);
           line-height: 1.4;
         }
 
         .privacy-link {
           color: var(--color-primary);
+          text-decoration: none;
+          margin-left: 4px;
+        }
+
+        .privacy-link:hover {
           text-decoration: underline;
         }
 
         .cookie-actions {
           display: flex;
-          gap: var(--spacing-3);
+          align-items: center;
+          gap: var(--spacing-2);
           flex-shrink: 0;
+        }
+
+        .btn-link {
+          background: none;
+          border: none;
+          color: var(--color-primary);
+          font-size: var(--font-size-sm);
+          font-weight: 500;
+          cursor: pointer;
+          padding: var(--spacing-1) var(--spacing-2);
+          text-decoration: none;
+          transition: opacity 0.2s ease;
+        }
+
+        .btn-link:hover {
+          opacity: 0.7;
+          text-decoration: underline;
         }
 
         .cookie-modal-overlay {
@@ -421,15 +510,25 @@ export default function CookieConsent() {
 
         @media (max-width: 768px) {
           .cookie-banner-content {
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-            gap: var(--spacing-4);
+            flex-direction: row;
+            align-items: center;
+            padding: var(--spacing-2) var(--spacing-3);
+            gap: var(--spacing-2);
+          }
+
+          .cookie-info p {
+            font-size: var(--font-size-xs);
+            line-height: 1.3;
           }
 
           .cookie-actions {
-            justify-content: center;
-            flex-wrap: wrap;
+            gap: var(--spacing-1);
+            flex-shrink: 0;
+          }
+
+          .btn-small {
+            padding: var(--spacing-1) var(--spacing-2);
+            font-size: var(--font-size-xs);
           }
 
           .cookie-modal {

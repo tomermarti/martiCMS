@@ -400,6 +400,13 @@ export async function generateHTML(article: ArticleData): Promise<string> {
               element.innerHTML = renderedContent;
               console.log('✅ Replaced main content with template:', variant.template.name);
               
+              // Initialize countdown timer if this is the urgent template
+              if (variant.template.name === 'Urgent Sale Layout') {
+                setTimeout(() => {
+                  initUrgentCountdownTimer(variant.data);
+                }, 100);
+              }
+              
               // Show content after template is applied
               showArticleContent();
               
@@ -578,6 +585,102 @@ export async function generateHTML(article: ArticleData): Promise<string> {
               console.log('✅ Content centering applied');
             }
           }
+
+          // Initialize countdown timer for urgent templates
+          function initUrgentCountdownTimer(variantData) {
+            const countdownElement = document.getElementById('countdown-timer');
+            if (!countdownElement) {
+              console.log('⚠️ Countdown element not found');
+              return;
+            }
+            
+            console.log('🕐 Initializing countdown timer with data:', variantData);
+            
+            // Create a unique key for this article's countdown
+            const countdownKey = 'countdown_' + window.abTestData.articleId;
+            
+            // Check if we have a stored end time
+            let endTime;
+            const storedEndTime = localStorage.getItem(countdownKey);
+            
+            if (storedEndTime) {
+              // Use stored end time if it exists and is still valid
+              endTime = new Date(parseInt(storedEndTime));
+              console.log('🕐 Using stored end time:', endTime);
+            } else {
+              // Calculate new end time based on timeLeft data or default to 24 hours
+              const timeLeftValue = variantData.timeLeft;
+              
+              if (timeLeftValue && timeLeftValue.includes(':')) {
+                // If timeLeft is provided in HH:MM:SS format, use it
+                const [hours, minutes, seconds] = timeLeftValue.split(':').map(Number);
+                endTime = new Date();
+                endTime.setHours(endTime.getHours() + hours);
+                endTime.setMinutes(endTime.getMinutes() + minutes);
+                endTime.setSeconds(endTime.getSeconds() + seconds);
+                console.log('🕐 Using provided time:', timeLeftValue, 'End time:', endTime);
+              } else {
+                // Default to 24 hours from now
+                endTime = new Date();
+                endTime.setHours(endTime.getHours() + 24);
+                console.log('🕐 Using default 24 hours, End time:', endTime);
+              }
+              
+              // Store the end time in localStorage
+              localStorage.setItem(countdownKey, endTime.getTime().toString());
+              console.log('💾 Stored end time in localStorage');
+            }
+            
+            // Clear any existing countdown interval
+            if (window.countdownInterval) {
+              clearInterval(window.countdownInterval);
+            }
+            
+            function updateCountdown() {
+              const now = new Date().getTime();
+              const distance = endTime.getTime() - now;
+              
+              if (distance < 0) {
+                countdownElement.innerHTML = '⏰ EXPIRED';
+                countdownElement.style.color = '#ff0000';
+                console.log('⏰ Countdown expired');
+                // Clear the stored end time since it's expired
+                localStorage.removeItem(countdownKey);
+                if (window.countdownInterval) {
+                  clearInterval(window.countdownInterval);
+                  window.countdownInterval = null;
+                }
+                return;
+              }
+              
+              const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+              const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+              const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+              
+              countdownElement.innerHTML = '⏰ ' + hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+            }
+            
+            // Update immediately and then every second
+            updateCountdown();
+            window.countdownInterval = setInterval(updateCountdown, 1000);
+            
+            console.log('✅ Countdown timer initialized and running');
+          }
+
+      // Expose countdown reset function globally for testing
+      window.resetCountdown = function() {
+        const countdownKey = 'countdown_' + window.abTestData.articleId;
+        localStorage.removeItem(countdownKey);
+        console.log('🔄 Countdown reset - will restart on next page load');
+        
+        // If there's an active countdown, reinitialize it
+        if (window.abTestData.currentVariant && window.abTestData.currentVariant.template && 
+            window.abTestData.currentVariant.template.name === 'Urgent Sale Layout') {
+          setTimeout(() => {
+            initUrgentCountdownTimer(window.abTestData.currentVariant.data);
+          }, 100);
+        }
+      };
 
       // Expose tracking function globally with full parameter tracking
       window.abTestTrackConversion = function(conversionType, eventData) {
@@ -1142,21 +1245,18 @@ export async function generateHTML(article: ArticleData): Promise<string> {
     </script>
     ` : ''}
     
-    <!-- CCPA Cookie Consent Banner -->
+    <!-- CCPA Cookie Consent Banner - Minimal Design -->
     <div id="cookie-banner" class="cookie-banner" style="display: none;">
         <div class="cookie-banner-content">
             <div class="cookie-info">
-                <h3>🍪 We Value Your Privacy</h3>
                 <p>
-                    We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
-                    By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.
-                    <br><br>
-                    California residents have additional <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">CCPA privacy rights</a>.
+                    We use cookies to enhance your experience. 
+                    <a href="https://daily.get.martideals.com/assets/ccpa-privacy-rights.html" class="privacy-link">Learn more</a>
                 </p>
             </div>
             <div class="cookie-actions">
-                <button onclick="acceptCookies()" class="btn btn-primary btn-small">Accept All</button>
-                <button onclick="rejectCookies()" class="btn btn-outlined btn-small">Reject All</button>
+                <button type="button" onclick="rejectCookies(event)" class="btn btn-outlined btn-small">Reject</button>
+                <button type="button" onclick="acceptCookies(event)" class="btn btn-primary btn-small">Accept</button>
             </div>
         </div>
     </div>
@@ -1170,7 +1270,11 @@ export async function generateHTML(article: ArticleData): Promise<string> {
             }
         }
         
-        function acceptCookies() {
+        function acceptCookies(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             localStorage.setItem('cookie-consent', JSON.stringify({
                 necessary: true,
                 analytics: true,
@@ -1179,9 +1283,14 @@ export async function generateHTML(article: ArticleData): Promise<string> {
             }));
             localStorage.setItem('cookie-consent-date', new Date().toISOString());
             document.getElementById('cookie-banner').style.display = 'none';
+            return false;
         }
         
-        function rejectCookies() {
+        function rejectCookies(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             localStorage.setItem('cookie-consent', JSON.stringify({
                 necessary: true,
                 analytics: false,
@@ -1190,6 +1299,7 @@ export async function generateHTML(article: ArticleData): Promise<string> {
             }));
             localStorage.setItem('cookie-consent-date', new Date().toISOString());
             document.getElementById('cookie-banner').style.display = 'none';
+            return false;
         }
         
         // Show banner on page load
@@ -1527,6 +1637,7 @@ function getInlineStyles(): string {
       margin: 0 auto;
       padding: 40px 20px;
       text-align: center;
+      width: 100%;
     }
     
     .featured-image {
@@ -1883,7 +1994,7 @@ function getInlineStyles(): string {
       right: 0;
       background: #fff;
       border-top: 1px solid rgba(60, 60, 67, 0.29);
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
       z-index: 10000;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -1892,42 +2003,74 @@ function getInlineStyles(): string {
     .cookie-banner-content {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 16px 20px;
+      padding: 12px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
     }
     
-    .cookie-info h3 {
-      margin: 0 0 8px 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #1d1d1f;
+    .cookie-info {
+      flex: 1;
     }
     
     .cookie-info p {
       margin: 0;
       color: rgba(60, 60, 67, 0.6);
       line-height: 1.4;
-      font-size: 14px;
+      font-size: 13px;
     }
     
     .privacy-link {
       color: #3C3C43;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+    
+    .privacy-link:hover {
       text-decoration: underline;
     }
     
     .cookie-actions {
       display: flex;
-      gap: 12px;
+      align-items: center;
+      gap: 8px;
       flex-shrink: 0;
     }
     
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary.btn-small {
+      background: #3C3C43;
+      color: #fff;
+    }
+    
+    .btn-primary.btn-small:hover {
+      background: #2C2C2F;
+    }
+    
+    .btn-outlined.btn-small {
+      background: transparent;
+      color: #3C3C43;
+      border: 1px solid rgba(60, 60, 67, 0.2);
+    }
+    
+    .btn-outlined.btn-small:hover {
+      background: rgba(60, 60, 67, 0.1);
+    }
+    
     .btn-sm {
-      padding: 8px 16px;
-      font-size: 14px;
-      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 6px;
       border: none;
       cursor: pointer;
       font-weight: 500;
@@ -1999,19 +2142,32 @@ function getInlineStyles(): string {
       }
       
       .cookie-banner-content {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-        gap: 16px;
+        flex-direction: row;
+        align-items: center;
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      
+      .cookie-info p {
+        font-size: 12px;
+        line-height: 1.3;
       }
       
       .cookie-actions {
-        justify-content: center;
-        flex-wrap: wrap;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      
+      .btn-small {
+        padding: 4px 8px;
+        font-size: 12px;
       }
       
       .article-container {
         padding: 24px 16px;
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
       }
       
       .article-title {

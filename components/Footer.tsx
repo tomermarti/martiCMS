@@ -34,6 +34,7 @@ export default function Footer() {
               <li><a href="https://www.martideals.com/assets/do-not-sell.html" className="ccpa-important">🔒 Do Not Sell My Personal Information</a></li>
               <li><a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a></li>
               <li><a href="https://www.martideals.com/cookie-policy">Cookie Policy</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); if (typeof window !== 'undefined' && (window as any).openCookiePreferences) { (window as any).openCookiePreferences(); } }} className="cookie-settings-link">🍪 Cookie Settings</a></li>
             </ul>
           </div>
         </div>
