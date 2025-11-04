@@ -145,3 +145,5 @@ With this implementation, you should see in Facebook Ads Manager:
 - **Conversion tracking** for A/B test optimization
 
 The Purchase events will be the same as Amazon clickouts, providing accurate conversion data for Facebook advertising campaigns.
+
+

@@ -1,64 +1,15 @@
 <header class="site-header">
     <div class="header-container">
         <div class="header-brand">
-            <a href="https://www.martideals.com" class="brand-link">
-                <img src="https://daily.get.martideals.com/assets/martideals_logo.png" alt="MartiDeals Logo" class="brand-logo" />
-                MartiDeals
+            <a href="https://www.{{DOMAIN}}" class="brand-link">
+                <img src="https://{{DOMAIN}}/assets/martideals_logo.png" alt="{{BRAND_NAME}} Logo" class="brand-logo" />
+                {{BRAND_NAME}}
             </a>
         </div>
-        <button class="hamburger-menu" id="hamburger-btn" aria-label="Toggle navigation">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-        </button>
         <nav class="header-nav" id="mobile-nav">
-            <a href="https://www.martideals.com" class="nav-link">Home</a>
+            <a href="https://www.{{DOMAIN}}" class="nav-link">Home</a>
 
         </nav>
     </div>
 </header>
 
-<script>
-(function() {
-    // Wait for elements to be available
-    function initHamburgerMenu() {
-        const nav = document.getElementById('mobile-nav');
-        const hamburger = document.getElementById('hamburger-btn');
-        
-        if (nav && hamburger) {
-            console.log('Hamburger menu initialized');
-            
-            hamburger.addEventListener('click', function() {
-                console.log('Hamburger clicked!');
-                nav.classList.toggle('active');
-                hamburger.classList.toggle('active');
-                console.log('Nav active:', nav.classList.contains('active'));
-            });
-            
-            return true;
-        }
-        return false;
-    }
-    
-    // Try to initialize immediately
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initHamburgerMenu);
-    } else {
-        // DOM already loaded, try now
-        if (!initHamburgerMenu()) {
-            // If elements not found, try again after a short delay
-            setTimeout(initHamburgerMenu, 100);
-        }
-    }
-    
-    // Global function for backward compatibility
-    window.toggleMobileMenu = function() {
-        const nav = document.getElementById('mobile-nav');
-        const hamburger = document.querySelector('.hamburger-menu');
-        if (nav && hamburger) {
-            nav.classList.toggle('active');
-            hamburger.classList.toggle('active');
-        }
-    };
-})();
-</script>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { uploadFile } from '../../../../lib/spaces'
+import { uploadFile, uploadLayoutFileToBothSpaces } from '../../../../lib/spaces'
 
 const CCPA_FILE_PATH = path.join(process.cwd(), 'public', 'ccpa-privacy-rights.html')
 
@@ -42,35 +42,27 @@ export async function PUT(request: NextRequest) {
     // Save to local file
     fs.writeFileSync(CCPA_FILE_PATH, content, 'utf8')
     
-    // Upload to CDN with cache purging
-    const timestamp = Date.now()
-    
-    // Upload main CCPA file with cache busting
-    const ccpaUrl = await uploadFile('assets/ccpa-privacy-rights.html', content, 'text/html', true)
-    
-    // Also upload a versioned copy for immediate access
-    const versionedKey = `assets/ccpa-privacy-rights-${timestamp}.html`
-    await uploadFile(versionedKey, content, 'text/html', true)
+    // Upload to both spaces with domain-specific content
+    const result = await uploadLayoutFileToBothSpaces('assets/ccpa-privacy-rights.html', content)
     
     // Update version tracker
     try {
       await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/layout/version`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'ccpa-privacy-rights', timestamp })
+        body: JSON.stringify({ type: 'ccpa-privacy-rights', timestamp: result.timestamp })
       })
     } catch (error) {
       console.warn('Failed to update version tracker:', error)
     }
     
-    console.log('🔄 CCPA Privacy Rights uploaded with cache purging at:', timestamp)
+    console.log('🔄 CCPA Privacy Rights uploaded to both spaces with cache purging:', result)
     
     return NextResponse.json({
       success: true,
-      message: 'CCPA Privacy Rights updated successfully with cache purging',
-      cdnUrl: ccpaUrl,
-      versionedUrl: `https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/${versionedKey}`,
-      timestamp,
+      message: 'CCPA Privacy Rights updated successfully on both spaces with cache purging',
+      results: result.results,
+      timestamp: result.timestamp,
       lastUpdated: new Date().toISOString(),
       cachePurged: true
     })

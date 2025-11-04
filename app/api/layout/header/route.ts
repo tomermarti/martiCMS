@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { uploadFile } from '@/lib/spaces'
+import { uploadFile, uploadLayoutFileToBothSpaces } from '@/lib/spaces'
 
-// Default header content with www.martideals.com links and hamburger menu
+// Default header content with dynamic domain placeholders
 const DEFAULT_HEADER = `<header class="site-header">
     <div class="header-container">
         <div class="header-brand">
-            <a href="https://www.martideals.com" class="brand-link">
-                <img src="https://www.martideals.com/martideals-logo.svg" alt="MartiDeals Logo" class="brand-logo" />
+            <a href="https://www.{{DOMAIN}}" class="brand-link">
+                <img src="https://{{DOMAIN}}/assets/martideals_logo.png" alt="{{BRAND_NAME}} Logo" class="brand-logo" />
+                {{BRAND_NAME}}
             </a>
         </div>
         <button class="hamburger-menu" onclick="toggleMobileMenu()" aria-label="Toggle navigation">
@@ -15,10 +16,10 @@ const DEFAULT_HEADER = `<header class="site-header">
             <span class="hamburger-line"></span>
         </button>
         <nav class="header-nav" id="mobile-nav">
-            <a href="https://www.martideals.com" class="nav-link">Home</a>
-            <a href="https://www.martideals.com/deals" class="nav-link">Deals</a>
-            <a href="https://www.martideals.com/about" class="nav-link">About</a>
-            <a href="https://www.martideals.com/contact" class="nav-link">Contact</a>
+            <a href="https://www.{{DOMAIN}}" class="nav-link">Home</a>
+            <a href="https://www.{{DOMAIN}}/deals" class="nav-link">Deals</a>
+            <a href="https://www.{{DOMAIN}}/about" class="nav-link">About</a>
+            <a href="https://www.{{DOMAIN}}/contact" class="nav-link">Contact</a>
         </nav>
     </div>
     <script>
@@ -58,27 +59,26 @@ export async function PUT(request: NextRequest) {
       )
     }
     
-    // Upload header to CDN with cache purging
-    const timestamp = Date.now()
-    const headerUrl = await uploadFile('assets/header.html', content, 'text/html', true)
+    // Upload header to both spaces with domain-specific content
+    const result = await uploadLayoutFileToBothSpaces('assets/header.html', content)
     
     // Update version tracker
     try {
       await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/layout/version`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'header', timestamp })
+        body: JSON.stringify({ type: 'header', timestamp: result.timestamp })
       })
     } catch (error) {
       console.warn('Failed to update version tracker:', error)
     }
     
-    console.log('🔄 Header uploaded with cache purging at:', timestamp)
+    console.log('🔄 Header uploaded to both spaces with cache purging:', result)
     
     return NextResponse.json({ 
-      message: 'Header updated successfully with cache purging',
-      url: headerUrl,
-      timestamp,
+      message: 'Header updated successfully on both spaces with cache purging',
+      results: result.results,
+      timestamp: result.timestamp,
       lastUpdated: new Date().toISOString(),
       cachePurged: true
     })

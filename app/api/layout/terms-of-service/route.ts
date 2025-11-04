@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { uploadFile } from '../../../../lib/spaces'
+import { uploadFile, uploadLayoutFileToBothSpaces } from '../../../../lib/spaces'
 
 const TERMS_FILE_PATH = path.join(process.cwd(), 'public', 'terms-of-service.html')
 
@@ -42,35 +42,27 @@ export async function PUT(request: NextRequest) {
     // Save to local file
     fs.writeFileSync(TERMS_FILE_PATH, content, 'utf8')
     
-    // Upload to CDN with cache purging
-    const timestamp = Date.now()
-    
-    // Upload main terms file with cache busting
-    const termsUrl = await uploadFile('assets/terms-of-service.html', content, 'text/html', true)
-    
-    // Also upload a versioned copy for immediate access
-    const versionedKey = `assets/terms-of-service-${timestamp}.html`
-    await uploadFile(versionedKey, content, 'text/html', true)
+    // Upload to both spaces with domain-specific content
+    const result = await uploadLayoutFileToBothSpaces('assets/terms-of-service.html', content)
     
     // Update version tracker
     try {
       await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/layout/version`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'terms-of-service', timestamp })
+        body: JSON.stringify({ type: 'terms-of-service', timestamp: result.timestamp })
       })
     } catch (error) {
       console.warn('Failed to update version tracker:', error)
     }
     
-    console.log('🔄 Terms of Service uploaded with cache purging at:', timestamp)
+    console.log('🔄 Terms of Service uploaded to both spaces with cache purging:', result)
     
     return NextResponse.json({
       success: true,
-      message: 'Terms of Service updated successfully with cache purging',
-      cdnUrl: termsUrl,
-      versionedUrl: `https://${process.env.ARTICLE_DOMAIN || 'daily.get.martideals.com'}/${versionedKey}`,
-      timestamp,
+      message: 'Terms of Service updated successfully on both spaces with cache purging',
+      results: result.results,
+      timestamp: result.timestamp,
       lastUpdated: new Date().toISOString(),
       cachePurged: true
     })

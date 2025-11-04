@@ -1,54 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { uploadLayoutFile } from '@/lib/spaces'
+import { uploadLayoutFile, uploadLayoutFileToBothSpaces } from '@/lib/spaces'
 
-// Default footer content with CCPA compliance and updated structure
+// Default footer content with dynamic domain placeholders
 const DEFAULT_FOOTER = `<footer class="site-footer">
     <div class="footer-container">
+        <!-- Editorial Note -->
+        <div class="editorial-note">
+            <p><strong>Editorial Note:</strong> We independently review all products. If you make a purchase through our links, we may receive a commission.</p>
+        </div>
+        
         <!-- Opt-in Disclaimer -->
         <div class="opt-in-disclaimer">
-            <p><strong>By clicking any links or continuing, you agree to the sharing of technical information with third parties for analytics, service improvements, and related business purposes.</strong></p>
+            <p>By continuing to use this site, you consent to our use of cookies and sharing of technical data with partners for analytics and service improvements.</p>
         </div>
         
-        <div class="footer-content">
-            <div class="footer-section">
-                <div class="footer-brand">
-                    <img src="https://www.martideals.com/martideals-logo.svg" alt="MartiDeals Logo" class="footer-logo" />
-                    <p>Your trusted source for the best deals and content.</p>
-                </div>
-            </div>
-            
-            <div class="footer-section">
-                <h4>COMPANY</h4>
-                <ul class="footer-links">
-                    <li><a href="https://www.martideals.com/about">About</a></li>
-                    <li><a href="https://www.martideals.com/privacy-policy">Privacy Policy</a></li>
-                    <li><a href="https://www.martideals.com/terms-of-service">Terms of Service</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h4>PRIVACY & LEGAL</h4>
-                <ul class="footer-links">
-                    <li><a href="https://www.martideals.com/">Categories</a></li>
-                    <li><a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a></li>
-                    <li><a href="https://www.martideals.com/assets/ccpa-privacy-rights.html">CCPA Privacy Rights</a></li>
-                    <li><a href="https://www.martideals.com/cookie-policy">Cookie Policy</a></li>
-                </ul>
-            </div>
+        <div class="footer-simple">
+            <a href="https://{{DOMAIN}}/assets/privacy-policy.html">Privacy Policy</a>
+            <a href="https://{{DOMAIN}}/assets/terms-of-service.html">Terms & Conditions</a>
+            <a href="https://{{DOMAIN}}/assets/do-not-sell.html" class="ccpa-important">🔒 Do Not Sell My Personal Information</a>
+            <a href="https://{{DOMAIN}}/assets/ccpa-privacy-rights.html">CCPA Notice</a>
         </div>
         
-        <div class="footer-bottom">
-            <div class="footer-bottom-content">
-                <p>&copy; 2025 MartiDeals. All rights reserved.</p>
-                <div class="ccpa-notice">
-                    <a href="https://www.martideals.com/assets/do-not-sell.html" class="ccpa-link">
-                        🔒 Your Privacy Choices / Do Not Sell My Personal Information
-                    </a>
-                </div>
-            </div>
+        <!-- Copyright -->
+        <div class="footer-copyright">
+            <p>{{BRAND_NAME}}.com © 2025 All Rights Reserved</p>
         </div>
     </div>
-</footer>`
+</footer>
+
+<!-- Cookie Consent Banner - Glass View Design -->
+<div id="cookie-banner" class="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 999999;">
+    <div class="cookie-banner-content">
+        <div class="cookie-info">
+            <p>
+                We use cookies to enhance your experience. 
+                <a href="https://{{DOMAIN}}/assets/ccpa-privacy-rights.html" class="privacy-link">Learn more</a>
+            </p>
+        </div>
+        <div class="cookie-actions">
+            <button type="button" onclick="rejectCookies(event)" class="btn-reject">Reject</button>
+            <button type="button" onclick="acceptCookies(event)" class="btn-accept">ACCEPT</button>
+        </div>
+    </div>
+</div>`
 
 export async function GET() {
   try {
@@ -77,8 +71,8 @@ export async function PUT(request: NextRequest) {
       )
     }
     
-    // Upload footer to CDN with cache purging
-    const result = await uploadLayoutFile('assets/footer.html', content)
+    // Upload footer to both spaces with domain-specific content
+    const result = await uploadLayoutFileToBothSpaces('assets/footer.html', content)
     
     // Update version tracker
     try {
@@ -91,12 +85,11 @@ export async function PUT(request: NextRequest) {
       console.warn('Failed to update version tracker:', error)
     }
     
-    console.log('🔄 Footer uploaded with cache purging:', result)
+    console.log('🔄 Footer uploaded to both spaces with cache purging:', result)
     
     return NextResponse.json({ 
-      message: 'Footer updated successfully with cache purging',
-      url: result.url,
-      versionedUrl: result.versionedUrl,
+      message: 'Footer updated successfully on both spaces with cache purging',
+      results: result.results,
       timestamp: result.timestamp,
       lastUpdated: new Date().toISOString(),
       cachePurged: true
