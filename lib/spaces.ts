@@ -128,7 +128,7 @@ export async function uploadLayoutFileToBothSpaces(key: string, templateContent:
       })
       
       console.log(`✅ Layout file uploaded to ${spaceName}: ${key} (versioned: ${versionedKey})`)
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Error uploading to ${spaceName}:`, error)
       errors.push({ space: spaceName, error: error.message })
       
