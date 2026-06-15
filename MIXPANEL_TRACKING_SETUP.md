@@ -77,7 +77,7 @@ Tracks how far users scroll through the article content.
 The official Mixpanel snippet is embedded in every published article HTML. It includes:
 - Stub methods that queue events before the library loads
 - Asynchronous loading for performance
-- Automatic initialization with token: `e474bceac7e0d60bc3c4cb27aaf1d4f7`
+- Automatic initialization with token: `cbf5921eb8ba5806906bd951d24dddb6`
 
 ### URL Parameter Tracking
 **All URL parameters are automatically captured**, including:
@@ -206,7 +206,7 @@ Open browser console and check:
 ### Mixpanel initialization errors?
 - Clear browser cache and reload
 - Check if script is loading from CDN
-- Verify token is correct: `e474bceac7e0d60bc3c4cb27aaf1d4f7`
+- Verify token is correct: `cbf5921eb8ba5806906bd951d24dddb6`
 
 ### Missing URL parameters?
 - Parameters are captured on page load

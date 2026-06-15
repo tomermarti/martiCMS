@@ -501,7 +501,7 @@ For issues or questions:
 
 ## Mixpanel Credentials
 
-- **Token**: e474bceac7e0d60bc3c4cb27aaf1d4f7
+- **Token**: cbf5921eb8ba5806906bd951d24dddb6
 - **Project ID**: 3829444
 - **Secret**: 166f513b2e6fcbc594e616dd3cd0b573
 

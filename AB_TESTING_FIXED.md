@@ -254,7 +254,7 @@ You can customize this in the code by changing the `trafficSplit` parameter.
 - Verify JSON has correct `changes` object
 
 ### "Not seeing events in Mixpanel"
-- Check Mixpanel token is correct: `e474bceac7e0d60bc3c4cb27aaf1d4f7`
+- Check Mixpanel token is correct: `cbf5921eb8ba5806906bd951d24dddb6`
 - Wait 5-10 minutes for events to appear
 - Check browser console for tracking errors
 - Verify you're looking at Project ID: 3829444

@@ -7,7 +7,7 @@ const testScript = `
 <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script>
 <script>
   // Initialize Mixpanel
-  mixpanel.init('e474bceac7e0d60bc3c4cb27aaf1d4f7', {
+  mixpanel.init('cbf5921eb8ba5806906bd951d24dddb6', {
     debug: false,
     track_pageview: true,
     persistence: 'localStorage',

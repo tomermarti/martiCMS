@@ -4,10 +4,18 @@ let mixpanel: any = null
 // Initialize Mixpanel
 const MIXPANEL_TOKEN = 'cbf5921eb8ba5806906bd951d24dddb6'
 
+type PendingEvent = {
+  eventName: string
+  properties: Record<string, any>
+}
+
+const pendingEvents: PendingEvent[] = []
+
 // Load mixpanel only on client side
 if (typeof window !== 'undefined') {
   import('mixpanel-browser').then((module) => {
     mixpanel = module.default
+    flushPendingEvents()
   }).catch((error) => {
     console.error('Failed to load mixpanel-browser:', error)
   })
@@ -16,19 +24,19 @@ if (typeof window !== 'undefined') {
 // Track initialization state
 let isInitialized = false
 
-// Check if analytics cookies are accepted
-function hasAnalyticsConsent(): boolean {
+// Track by default when there is no saved choice, but honor explicit analytics rejection.
+export function canTrackAnalytics(): boolean {
   if (typeof window === 'undefined') return false
   
   try {
     const consent = localStorage.getItem('cookie-consent')
-    if (!consent) return false
+    if (!consent) return true
     
     const preferences = JSON.parse(consent)
-    return preferences.analytics === true
+    return preferences.analytics !== false
   } catch (error) {
     console.error('Failed to check cookie consent:', error)
-    return false
+    return true
   }
 }
 
@@ -48,9 +56,9 @@ function ensureInitialized(): boolean {
     return false
   }
   
-  // Check if analytics consent is given
-  if (!hasAnalyticsConsent()) {
-    console.log('Mixpanel: Analytics cookies not accepted, skipping initialization')
+  // Check if analytics was explicitly rejected
+  if (!canTrackAnalytics()) {
+    console.log('Mixpanel: Analytics tracking explicitly rejected, skipping initialization')
     return false
   }
   
@@ -71,6 +79,22 @@ function ensureInitialized(): boolean {
   }
   
   return isInitialized
+}
+
+function flushPendingEvents(): void {
+  if (pendingEvents.length === 0 || !ensureInitialized()) return
+
+  while (pendingEvents.length > 0) {
+    const event = pendingEvents.shift()
+    if (!event) continue
+
+    try {
+      mixpanel.track(event.eventName, event.properties)
+      console.log(`Tracked queued event: ${event.eventName}`, event.properties)
+    } catch (error) {
+      console.error(`Failed to track queued event ${event.eventName}:`, error)
+    }
+  }
 }
 
 // Extract ALL URL parameters and tracking data from URL
@@ -152,7 +176,10 @@ export function getABTestContext(): Record<string, any> {
 
 // Enhanced tracking function that includes all context
 export function trackWithFullContext(eventName: string, properties: Record<string, any> = {}): void {
-  if (!ensureInitialized()) return
+  if (!canTrackAnalytics()) {
+    console.log(`Mixpanel: Analytics tracking explicitly rejected, skipping ${eventName}`)
+    return
+  }
   
   const trackingParams = getTrackingParameters()
   const abTestContext = getABTestContext()
@@ -172,6 +199,14 @@ export function trackWithFullContext(eventName: string, properties: Record<strin
     timestamp: new Date().toISOString(),
     ...properties // User properties override defaults
   }
+
+  if (!mixpanel) {
+    pendingEvents.push({ eventName, properties: fullProperties })
+    console.log(`Mixpanel: Library not loaded yet, queued ${eventName}`)
+    return
+  }
+  
+  if (!ensureInitialized()) return
   
   try {
     mixpanel.track(eventName, fullProperties)
