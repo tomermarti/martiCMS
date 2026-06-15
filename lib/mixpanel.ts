@@ -2,7 +2,7 @@
 let mixpanel: any = null
 
 // Initialize Mixpanel
-const MIXPANEL_TOKEN = 'e474bceac7e0d60bc3c4cb27aaf1d4f7'
+const MIXPANEL_TOKEN = 'cbf5921eb8ba5806906bd951d24dddb6'
 
 // Load mixpanel only on client side
 if (typeof window !== 'undefined') {

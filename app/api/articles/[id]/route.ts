@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateHTML } from '@/lib/template'
-import { uploadArticle, deleteArticleFolder } from '@/lib/spaces'
-import { generateStaticABTestFile } from '@/lib/ab-testing-static-generator'
 
 export async function GET(
   request: NextRequest,
@@ -69,25 +66,6 @@ export async function PUT(
       },
     })
     
-    // If published (or was already published), generate and upload HTML
-    if (data.published || existing.published) {
-      console.log(`🔄 Republishing article: ${article.slug} (published: ${data.published}, was published: ${existing.published})`)
-      
-      const html = await generateHTML({
-        ...data,
-        id: article.id,
-        slug: article.slug,
-        publishedAt: article.publishedAt?.toISOString(),
-      })
-      
-      await uploadArticle(article.slug, html, true)
-      
-      // Also regenerate A/B test file for serverless operation
-      await generateStaticABTestFile(article.id, article.slug)
-      
-      console.log(`✅ Article republished to CDN: ${article.slug}`)
-    }
-    
     return NextResponse.json(article)
   } catch (error: any) {
     console.error('Error updating article:', error)
@@ -113,11 +91,6 @@ export async function DELETE(
         { error: 'Article not found' },
         { status: 404 }
       )
-    }
-    
-    // Delete from Digital Ocean Spaces
-    if (article.published) {
-      await deleteArticleFolder(article.slug)
     }
     
     // Delete from database

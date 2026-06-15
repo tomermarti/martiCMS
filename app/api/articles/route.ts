@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateHTML } from '@/lib/template'
-import { uploadArticle } from '@/lib/spaces'
+import { handleDatabaseError, isDatabaseError } from '@/lib/db-error-handler'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,20 +51,14 @@ export async function POST(request: NextRequest) {
       },
     })
     
-    // If published, generate and upload HTML
-    if (data.published) {
-      const html = await generateHTML({
-        ...data,
-        slug: article.slug,
-        publishedAt: article.publishedAt?.toISOString(),
-      })
-      
-      await uploadArticle(article.slug, html, true)
-    }
-    
     return NextResponse.json(article)
   } catch (error: any) {
     console.error('Error creating article:', error)
+    
+    if (isDatabaseError(error)) {
+      return handleDatabaseError(error, 'create article')
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Failed to create article' },
       { status: 500 }
@@ -93,6 +86,12 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(articles)
   } catch (error: any) {
+    if (isDatabaseError(error)) {
+      const response = handleDatabaseError(error, 'fetch articles')
+      // Return empty articles array for GET requests
+      return NextResponse.json([], { status: 200 })
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Failed to fetch articles' },
       { status: 500 }

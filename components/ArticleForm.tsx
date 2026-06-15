@@ -236,7 +236,7 @@ export default function ArticleForm({ article }: ArticleFormProps) {
             This allows for powerful A/B testing and dynamic content without editing the article directly.
           </p>
           <div className="info-actions">
-            <a href="/templates" target="_blank" className="btn btn-outlined btn-small">
+            <a href="/admin/templates" target="_blank" className="btn btn-outlined btn-small">
               📄 Manage Templates
             </a>
           </div>
@@ -249,7 +249,7 @@ export default function ArticleForm({ article }: ArticleFormProps) {
           <h2 className="form-section-title">🎯 AB Testing Variants</h2>
           <p className="text-tertiary" style={{ marginBottom: 'var(--spacing-4)' }}>
             Create different versions of this article to test what performs best. 
-            <a href="/templates" target="_blank" style={{ color: 'var(--primary-color)', marginLeft: '8px' }}>
+            <a href="/admin/templates" target="_blank" style={{ color: 'var(--primary-color)', marginLeft: '8px' }}>
               Manage Templates →
             </a>
           </p>
@@ -269,12 +269,12 @@ export default function ArticleForm({ article }: ArticleFormProps) {
               onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
             />
             <span className="form-label" style={{ marginBottom: 0 }}>
-              Publish to Digital Ocean Spaces
+              Publish on Vercel
             </span>
           </label>
           <small className="text-tertiary">
             {formData.published
-              ? '✅ Article will be deployed to Digital Ocean Spaces'
+              ? '✅ Article will be available on its public Vercel route'
               : '⚠️ Article will be saved as draft only'
             }
           </small>

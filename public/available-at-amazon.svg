@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="28" viewBox="0 0 170 28" role="img" aria-labelledby="title">
+  <title id="title">Available at Amazon</title>
+  <rect width="170" height="28" rx="4" fill="#ffffff"/>
+  <text x="4" y="18" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#666666">available at</text>
+  <text x="78" y="18" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#111111">amazon</text>
+  <path d="M103 22c10 4 26 3 38-5" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round"/>
+  <path d="M138 17l5-1-2 5" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

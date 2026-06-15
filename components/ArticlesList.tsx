@@ -79,7 +79,7 @@ export default function ArticlesList({ initialArticles }: ArticlesListProps) {
         gap: 'var(--spacing-4)',
         flexWrap: 'wrap'
       }}>
-        <Link href="/articles/new" className="btn btn-primary btn-large">
+        <Link href="/admin/articles/new" className="btn btn-primary btn-large">
           + Create New Article
         </Link>
         
@@ -163,7 +163,7 @@ export default function ArticlesList({ initialArticles }: ArticlesListProps) {
               Clear Search
             </button>
           ) : (
-            <Link href="/articles/new" className="btn btn-primary">
+            <Link href="/admin/articles/new" className="btn btn-primary">
               Create Article
             </Link>
           )}
@@ -215,7 +215,7 @@ export default function ArticlesList({ initialArticles }: ArticlesListProps) {
 
               <div className="article-actions">
                 <Link 
-                  href={`/articles/${article.id}`} 
+                  href={`/admin/articles/${article.id}`} 
                   className="btn btn-primary btn-sm"
                 >
                   Edit

@@ -9,7 +9,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   })
 
   if (!article) {
-    redirect('/')
+    redirect('/admin')
   }
 
   // Convert to simplified article format for the new form

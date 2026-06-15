@@ -45,7 +45,6 @@ model Article {
   @@index([slug])
   @@index([published])
   @@index([createdAt])
-  @@map("cms_articles")
 }
 
 model ABTest {
@@ -86,7 +85,6 @@ model ABTest {
   @@index([articleId])
   @@index([status])
   @@index([startDate])
-  @@map("cms_ab_tests")
 }
 
 model ABVariant {
@@ -164,7 +162,6 @@ model ABVariant {
   
   @@index([testId])
   @@index([trafficPercent])
-  @@map("cms_ab_variants")
 }
 
 model ABTestEvent {
@@ -208,7 +205,6 @@ model ABTestEvent {
   @@index([sessionId])          // Query events by user session
   @@index([eventType])          // Query events by type
   @@index([createdAt])          // Query events by date
-  @@map("cms_ab_test_events")
 }
 
 model Template {
@@ -237,7 +233,6 @@ model Template {
   
   @@index([category])
   @@index([isActive])
-  @@map("cms_templates")
 }
 
 model ArticleVariant {
@@ -304,6 +299,5 @@ model ArticleVariant {
   @@index([templateId])
   @@index([isControl])
   @@index([isActive])
-  @@map("cms_article_variants")
 }
 

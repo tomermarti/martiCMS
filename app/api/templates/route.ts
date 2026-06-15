@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handleDatabaseError, isDatabaseError } from '@/lib/db-error-handler'
 
 // GET /api/templates - List all templates
 export async function GET(request: NextRequest) {
@@ -25,9 +26,18 @@ export async function GET(request: NextRequest) {
       templates
     })
   } catch (error: any) {
-    console.error('Error fetching templates:', error)
+    if (isDatabaseError(error)) {
+      const response = handleDatabaseError(error, 'fetch templates')
+      // Add empty templates array for GET requests
+      const responseData = await response.json()
+      return NextResponse.json({
+        ...responseData,
+        templates: []
+      }, { status: response.status })
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch templates' },
+      { error: 'Failed to fetch templates', details: error.message },
       { status: 500 }
     )
   }
@@ -76,9 +86,12 @@ export async function POST(request: NextRequest) {
       template
     })
   } catch (error: any) {
-    console.error('Error creating template:', error)
+    if (isDatabaseError(error)) {
+      return handleDatabaseError(error, 'create template')
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create template' },
+      { error: 'Failed to create template', details: error.message },
       { status: 500 }
     )
   }
