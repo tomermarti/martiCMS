@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import analytics from '@/lib/mixpanel'
 
@@ -31,6 +31,12 @@ interface PublicArticleRendererProps {
     author: string
     facebookPixel?: string | null
   }
+}
+
+interface StickyCta {
+  asin: string
+  href: string
+  title: string
 }
 
 function loadMetaPixel(pixelId: string) {
@@ -77,6 +83,7 @@ export default function PublicArticleRenderer({ html, article }: PublicArticleRe
   const containerRef = useRef<HTMLDivElement>(null)
   const searchParams = useSearchParams()
   const trackedArticleIdRef = useRef<string | null>(null)
+  const [stickyCta, setStickyCta] = useState<StickyCta | null>(null)
   const { id, slug, title, author, facebookPixel } = article
 
   useEffect(() => {
@@ -155,11 +162,125 @@ export default function PublicArticleRenderer({ html, article }: PublicArticleRe
     }
   }, [id, slug])
 
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const products = Array.from(container.querySelectorAll<HTMLElement>('.br-product'))
+    if (!products.length) return
+
+    let frame = 0
+
+    const buildTrackedHref = (asin: string, fallbackHref: string) => {
+      const campaign = searchParams.get('utm_campaign')
+      if (!campaign) return fallbackHref
+
+      return `https://tracking.martideals.com/partners/asin-redirect?asin=${encodeURIComponent(asin)}&redirectId=pools-${encodeURIComponent(campaign)}`
+    }
+
+    const syncStickyCta = () => {
+      frame = 0
+
+      if (window.innerWidth > 768) {
+        setStickyCta(null)
+        return
+      }
+
+      const viewportAnchor = window.innerHeight * 0.55
+      let activeProduct: HTMLElement | null = null
+      let closestDistance = Number.POSITIVE_INFINITY
+
+      for (const product of products) {
+        const rect = product.getBoundingClientRect()
+
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+          continue
+        }
+
+        const isCurrentProduct = rect.top <= viewportAnchor && rect.bottom >= viewportAnchor
+        const distance = isCurrentProduct ? 0 : Math.abs(rect.top - viewportAnchor)
+
+        if (distance < closestDistance) {
+          closestDistance = distance
+          activeProduct = product
+        }
+      }
+
+      if (!activeProduct) {
+        setStickyCta(null)
+        return
+      }
+
+      const productLink =
+        activeProduct.querySelector<HTMLAnchorElement>('.br-btn[data-asin]') ||
+        activeProduct.querySelector<HTMLAnchorElement>('.listicle-cta[data-asin]')
+
+      const asin = productLink?.dataset.asin
+      if (!productLink || !asin) {
+        setStickyCta(null)
+        return
+      }
+
+      const productTitle =
+        activeProduct.querySelector('h3')?.textContent?.trim() ||
+        'Current Product'
+
+      setStickyCta((current) => {
+        const nextHref = buildTrackedHref(asin, productLink.href)
+
+        if (
+          current?.asin === asin &&
+          current.href === nextHref &&
+          current.title === productTitle
+        ) {
+          return current
+        }
+
+        return {
+          asin,
+          href: nextHref,
+          title: productTitle,
+        }
+      })
+    }
+
+    const requestSync = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(syncStickyCta)
+    }
+
+    syncStickyCta()
+    window.addEventListener('scroll', requestSync, { passive: true })
+    window.addEventListener('resize', requestSync)
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', requestSync)
+      window.removeEventListener('resize', requestSync)
+    }
+  }, [searchParams])
+
   return (
-    <div
-      ref={containerRef}
-      className="public-article-renderer"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <>
+      <div
+        ref={containerRef}
+        className="public-article-renderer"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {stickyCta && (
+        <div className="public-sticky-cta" role="region" aria-label="Current product price check">
+          <div className="public-sticky-cta__title">{stickyCta.title}</div>
+          <a
+            href={stickyCta.href}
+            className="public-sticky-cta__button"
+            target="_blank"
+            rel="nofollow noopener noreferrer"
+            data-asin={stickyCta.asin}
+          >
+            Check Price
+          </a>
+        </div>
+      )}
+    </>
   )
 }
