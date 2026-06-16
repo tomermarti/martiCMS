@@ -3,8 +3,8 @@ import MixpanelProvider from '@/components/MixpanelProvider'
 import AppShell from '@/components/AppShell'
 
 export const metadata = {
-  title: 'MartiDeals - Your Trusted Source for the Best Deals',
-  description: 'Discover curated deals, honest reviews, and expert shopping recommendations at MartiDeals.com',
+  title: 'MartiDeals Reviews - Practical Buying Guides for Home Products',
+  description: 'Read clear MartiDeals reviews and buying guides for pools, water filtering, vacuums, home security, and everyday home products.',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

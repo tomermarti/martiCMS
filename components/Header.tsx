@@ -12,8 +12,8 @@ export default function Header() {
         <div className="header-brand">
           <Link href="/" className="brand-link">
             <img 
-              src="/martideals-logo.svg" 
-              alt="MartiDeals Logo" 
+              src="/martideals-review-logo.png" 
+              alt="MartiDeals" 
               className="brand-logo"
             />
           </Link>
@@ -75,8 +75,9 @@ export default function Header() {
         }
 
         .brand-logo {
-          height: 50px;
+          height: 44px;
           width: auto;
+          object-fit: contain;
         }
 
         .header-nav {
@@ -95,8 +96,8 @@ export default function Header() {
         }
 
         .nav-link:hover {
-          background: var(--color-systemFill);
-          color: var(--color-primary);
+          background: rgba(232, 71, 10, 0.08);
+          color: #E8470A;
         }
 
         .mobile-menu-toggle {

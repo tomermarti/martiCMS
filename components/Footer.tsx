@@ -10,8 +10,8 @@ export default function Footer() {
           <div className="footer-section">
             <div className="footer-brand">
               <img 
-                src="/martideals-logo.svg" 
-                alt="MartiDeals Logo" 
+                src="/martideals-review-logo.png" 
+                alt="MartiDeals" 
                 className="footer-logo"
               />
               <p>Your trusted source for the best deals and content management.</p>
@@ -86,8 +86,9 @@ export default function Footer() {
         }
 
         .footer-logo {
-          height: 60px;
+          height: 52px;
           width: auto;
+          object-fit: contain;
           margin-bottom: var(--spacing-3);
         }
 
